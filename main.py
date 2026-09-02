@@ -1,20 +1,10 @@
 import os
 from dotenv import load_dotenv
 from openai_tools import create_client, parse_response
-from pydantic import BaseModel, Field
+from models import TextResponse, BoolResponse
 
 MODEL_NAME = "gpt-5.6-luna"
 REASONING_EFFORT = "low"
-
-class TextResponse(BaseModel):
-    """A simple text response model."""
-
-    response: str = Field(
-        default_factory=str,
-        description=(
-            "The text of the response"
-        ),
-    )
 
 if __name__ == "__main__":
     load_dotenv()
@@ -25,9 +15,9 @@ if __name__ == "__main__":
         client,
         model=MODEL_NAME,
         instructions="You are a helpful assistant",
-        input="Hello! What is your name?",
+        input="Is 2+2 = 5?",
         reasoning={"effort": REASONING_EFFORT},
-        text_format=TextResponse,
+        text_format=BoolResponse,
     )
 
     print(response.output_parsed.response)

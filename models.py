@@ -31,3 +31,6 @@ class TextListResponse(BaseModel):
     """A list of plain-text answers."""
 
     response: list[str] = Field(description="List of plain-text responses")
+
+
+ResponseModel = TextResponse | BoolResponse | IntResponse | FloatResponse | TextListResponse

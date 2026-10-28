@@ -9,11 +9,22 @@ class Semiotique:
     def __init__(self):
         load_dotenv()
         self.client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
-        self.model = "openai/gpt-5.6-luna"
+        self.model = "openai/gpt-6-luna"
+        self.context: list[str] = []
+
+    def push_context(self, context: str) -> None:
+        self.context.append(context)
+
+    def pop_context(self) -> None:
+        if not self.context:
+            raise IndexError("Cannot pop context from an empty context stack")
+        self.context.pop()
 
     def __call__(self, value: str, *, output_type: type = str):
         if not isinstance(output_type, type):
             raise TypeError("output_type must be a type")
+
+        system_prompt = "\n\n".join(self.context)
 
         # An object envelope supports scalar, collection, and custom output types.
         output_model = create_model("Output", value=(output_type, ...))
@@ -27,7 +38,10 @@ class Semiotique:
 
         response = self.client.chat.send(
             model=self.model,
-            messages=[{"role": "user", "content": value}],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": value},
+            ],
             response_format=response_format,
             provider={"require_parameters": True},
         )

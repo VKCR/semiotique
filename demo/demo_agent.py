@@ -28,7 +28,10 @@ class Person(Agent):
         self.__doc__ = f"{type(self).__doc__}\n\nThe kind of person : {description}"
 
     def __call__(self, prompt: str, **kwargs) -> None:
-        print(S(prompt, **kwargs))
+        if 'animal' in kwargs and S(f"The following prompt describes an action of the person on the animal : {prompt}"):
+            kwargs['animal'](prompt)
+        else:
+            print("Action not allowed")
 
     def approach_pet(self, pet: Animal) -> None:
         print(pet.pet())
@@ -45,3 +48,12 @@ def demo():
     for person in (pet_owner, unknown_burglar):
         for animal in (dog, cat):
             person.approach_pet(animal)
+
+    pet_owner("Eat a burger")
+    pet_owner("The person throws a ball", animal=dog)
+
+def demo2(): # agentic loop
+    dog = Animal("dog")
+    while (True):
+        action = input("What do you do to the dog?")
+        dog(f"The following describes the action of the person on the dog : {action}")

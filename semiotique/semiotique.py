@@ -1,4 +1,6 @@
 import os
+from contextlib import contextmanager
+from collections.abc import Iterator
 
 from dotenv import load_dotenv
 from openrouter import OpenRouter
@@ -12,13 +14,21 @@ class Semiotique:
         self.model = "openai/gpt-6-luna"
         self.context: list[str] = []
 
-    def push_context(self, context: str) -> None:
+    def _push_context(self, context: str) -> None:
         self.context.append(context)
 
-    def pop_context(self) -> None:
+    def _pop_context(self) -> None:
         if not self.context:
             raise IndexError("Cannot pop context from an empty context stack")
         self.context.pop()
+
+    @contextmanager
+    def with_context(self, context: str) -> Iterator[None]:
+        self._push_context(context)
+        try:
+            yield
+        finally:
+            self._pop_context()
 
     def __call__(self, value: str, *, output_type: type = str):
         if not isinstance(output_type, type):

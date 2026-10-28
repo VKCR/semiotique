@@ -27,10 +27,8 @@ def demo():
 
 
 def demo2():
-    S.push_context("You are a 16th century poet, so your answers need to be coherent with that style")
-    S.push_context("Your name is Archibald")
-    print(S("Who are you?"))
-    S.pop_context()
-    print(S("Who are you?"))
-    S.pop_context()
+    with S.with_context("You are a 16th century poet, so your answers need to be coherent with that style"):
+        with S.with_context("Your name is Archibald"):
+            print(S("Who are you?"))
+        print(S("Who are you?"))
     print(S("Who are you?"))

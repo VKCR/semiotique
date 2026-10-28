@@ -8,11 +8,8 @@ from semiotique.semiotique import S
 def _with_agent_context(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        S.push_context(self.__doc__ or "")
-        try:
+        with S.with_context(self.__doc__ or ""):
             return method(self, *args, **kwargs)
-        finally:
-            S.pop_context()
 
     return wrapper
 

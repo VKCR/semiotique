@@ -3,17 +3,16 @@ from enum import Enum
 from semiotique.semiotique import S
 
 
-class AnimalType(str, Enum):
-    MAMMAL = "mammal"
-    BIRD = "bird"
-    FISH = "fish"
-    REPTILE = "reptile"
-    AMPHIBIAN = "amphibian"
-    INVERTEBRATE = "invertebrate"
-    OTHER = "other"
-
-
 def demo():
+    class AnimalType(str, Enum):
+        MAMMAL = "mammal"
+        BIRD = "bird"
+        FISH = "fish"
+        REPTILE = "reptile"
+        AMPHIBIAN = "amphibian"
+        INVERTEBRATE = "invertebrate"
+        OTHER = "other"
+
     animal = input("What kind of animal do you have? ")
     animal_type = S(
         f"Classify the type of animal {animal}?",
@@ -32,6 +31,7 @@ def demo2():
             print(S("Who are you?"))
         print(S("Who are you?"))
     print(S("Who are you?"))
+
 
 def demo3():
     with S.with_memory():

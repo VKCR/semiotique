@@ -14,7 +14,7 @@ def _with_agent_context(method):
     return wrapper
 
 
-class Agent(ABC):
+class Agent[T](ABC):
     """Base class for building agents.
 
     Subclasses should override this docstring with a description of the agent's behavior.
@@ -27,6 +27,6 @@ class Agent(ABC):
                 setattr(cls, name, _with_agent_context(method))
 
     @abstractmethod
-    def __call__(self, prompt: str, **kwargs) -> None:
+    def __call__(self, prompt: str, **kwargs) -> T:
         """Interpret the prompt, optionally using the supplied keyword arguments."""
         pass

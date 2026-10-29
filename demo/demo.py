@@ -32,3 +32,9 @@ def demo2():
             print(S("Who are you?"))
         print(S("Who are you?"))
     print(S("Who are you?"))
+
+def demo3():
+    with S.with_memory():
+        print(S("My name is Bob, and I am 30 years old. What is your name?"))
+        print(S("What is my name?"))
+        print(S("What is my age?"))

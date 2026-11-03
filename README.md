@@ -1,7 +1,44 @@
 # semiotique
 - Build a small demo
   - Personal note taker demo
+- Add the possibility to include tools, such that you have a "fallback" for the agentic loop which is just to call S with tools
+  - And add the possibility to set reasoning.
+- Autowrap the methods of Agent derived classes to make them tool compatible, in the Agent abstract class, for example suffixing `_tool`
 - Move the context curation strategy into its own method of runtime class
 - Move calling the LLM client into its own method of runtime class
   - And implement the split between using a generic LLM and using a decision model
 - Change the name "value" of the parameter to semiotique __call__ method
+- Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
+  - Include that in the README
+- Notetaker app implementation
+  - Have two base classes, which will also act as the fallback class, one for reading and one for writing with the following primitives:
+    - Writing
+      - Create a new note
+      - Update a note by ID
+      - Delete a note by ID
+    - Reading
+      - Get a note by ID
+      - Get similar notes by embedding
+        - INSIGHT : reword the request in this case, to maximize embedding similarity
+          - In the parent method
+      - Search notes by keyword
+      - Get notes by category(s)
+      - Get notes by link to root note
+    - Then have a smart writing class
+    - WHAT KINDS OF BEHAVIORS DO WE WANT TO IMPLEMENT
+      - Writing
+        - I add a note, and it automagically integrates it into my knowledge base
+          - Autosuggests categories, links, merging with another note
+            - But always need human validation for doing so
+      - Reading
+        - Answer vague queries on the KB, leveraging different strategies
+        - First, if there are any obvious ones => fallback to relevant ones
+        - Then, for vague one, implement successive RAG-like approach, with human in the loop, for iterative exploration
+      - In both cases : user feedback is important in all cases.
+      - NEED TO HAVE AN EXAMPLE DB FILE
+        - What kinds of notes?
+        - Facts, with different categories.
+      - THE CODE SHOULD BE VERY STRAIGHTFORWARD
+        - Easily human-legible
+  - Base type for a note:
+    - ID | timestamp | categories | links to other notes | content | embedding

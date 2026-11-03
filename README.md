@@ -42,3 +42,4 @@
         - Easily human-legible
   - Base type for a note:
     - ID | timestamp | categories | links to other notes | content | embedding
+

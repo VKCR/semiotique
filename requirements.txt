@@ -1,3 +1,4 @@
 openrouter
 python-dotenv
 pydantic
+sqlite-vec

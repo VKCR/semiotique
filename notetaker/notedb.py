@@ -89,6 +89,121 @@ def init_db() -> None:
         )
 
 
+def get_note_by_ids(note_ids: list[str]) -> list[Note]:
+    """Fetch matching notes with their embeddings, categories, and linked IDs."""
+    placeholders = ", ".join("?" for _ in note_ids)
+    with _connect() as connection:
+        rows = connection.execute(
+            f"""
+            SELECT notes.id, notes.created_at, notes.content, note_embeddings.embedding
+            FROM notes
+            JOIN note_embeddings ON note_embeddings.note_id = notes.id
+            WHERE notes.id IN ({placeholders})
+            """,
+            note_ids,
+        ).fetchall()
+        categories = connection.execute(
+            f"SELECT note_id, category FROM categories WHERE note_id IN ({placeholders})",
+            note_ids,
+        ).fetchall()
+        links = connection.execute(
+            f"""
+            SELECT note_id_1 AS note_id, note_id_2 AS linked_id
+            FROM links
+            WHERE note_id_1 IN ({placeholders})
+            UNION
+            SELECT note_id_2 AS note_id, note_id_1 AS linked_id
+            FROM links
+            WHERE note_id_2 IN ({placeholders})
+            """,
+            note_ids + note_ids,
+        ).fetchall()
+
+    categories_by_id: dict[str, list[str]] = {note_id: [] for note_id in note_ids}
+    links_by_id: dict[str, list[str]] = {note_id: [] for note_id in note_ids}
+    for category in categories:
+        categories_by_id[category["note_id"]].append(category["category"])
+    for link in links:
+        links_by_id[link["note_id"]].append(link["linked_id"])
+
+    return [
+        _row_to_note(
+            **row,
+            categories=categories_by_id[row["id"]],
+            linked_ids=links_by_id[row["id"]],
+        )
+        for row in rows
+    ]
+
+
+def get_note_ids_by_category(category: str) -> list[str]:
+    """Fetch all note IDs associated with a category."""
+    with _connect() as connection:
+        rows = connection.execute(
+            "SELECT note_id FROM categories WHERE category = ?",
+            (category,),
+        ).fetchall()
+    return [row["note_id"] for row in rows]
+
+
+def get_note_ids_by_keyword(keyword: str) -> list[str]:
+    """Fetch note IDs whose content contains the keyword (case-sensitive)."""
+    with _connect() as connection:
+        rows = connection.execute(
+            "SELECT id FROM notes WHERE instr(content, ?) > 0",
+            (keyword,),
+        ).fetchall()
+    return [row["id"] for row in rows]
+
+
+def get_linked_note_ids(note_id: str) -> list[str]:
+    """Fetch all note IDs reachable through links, including the seed ID."""
+    with _connect() as connection:
+        rows = connection.execute(
+            """
+            WITH RECURSIVE reachable(note_id) AS (
+                SELECT ?
+                UNION
+                SELECT CASE
+                    WHEN links.note_id_1 = reachable.note_id THEN links.note_id_2
+                    ELSE links.note_id_1
+                END
+                FROM links
+                JOIN reachable
+                    ON links.note_id_1 = reachable.note_id
+                    OR links.note_id_2 = reachable.note_id
+            )
+            SELECT note_id FROM reachable
+            """,
+            (note_id,),
+        ).fetchall()
+    return [row["note_id"] for row in rows]
+
+
+def get_similar_note_ids(note_id: str, n: int = 10) -> list[tuple[str, float]]:
+    """Return the n most similar other notes and their cosine similarity scores."""
+    with _connect() as connection:
+        rows = connection.execute(
+            """
+            WITH nearest AS MATERIALIZED (
+                SELECT note_id, distance
+                FROM note_embeddings
+                WHERE embedding MATCH (
+                    SELECT embedding FROM note_embeddings WHERE note_id = ?
+                )
+                AND k = ?
+            )
+            SELECT note_id, 1.0 - distance AS similarity
+            FROM nearest
+            WHERE note_id != ?
+            ORDER BY distance
+            LIMIT ?
+            """,
+            (note_id, n + 1, note_id, n),
+        ).fetchall()
+    return [(row["note_id"], row["similarity"]) for row in rows]
+
+
 def insert_note(content: str) -> str:
     """Insert a note and its computed embedding with a UUID and UTC timestamp."""
     embedding = compute_embedding(content)

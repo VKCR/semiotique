@@ -43,4 +43,8 @@
         - Easily human-legible
   - WHEN INSERTING => autosuggest integrations (links / categories / merging)
   - WHEN READING => autosuggest exploring similar things / summaries / hardcoded strategy for searching such as giving more weight to keyword results vs linked vs categorized
+- FAR : improve perf
+  - Obviously don't be a wrapper around pydantic-ai
+  - Parallelization
+  - Use Jev for classification tasks
 

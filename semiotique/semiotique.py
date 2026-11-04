@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from collections.abc import Callable, Iterator, Sequence
 from typing import Any
 
+import pydantic_ai
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage
@@ -13,6 +14,7 @@ from pydantic_ai.providers.openrouter import OpenRouterProvider
 class Semiotique:
     def __init__(self):
         load_dotenv()
+        pydantic_ai.BANNER_ENABLED = False
         self.provider = OpenRouterProvider(api_key=os.getenv("OPENROUTER_API_KEY"))
         self.model = "openai/gpt-6-luna"
         self.context: list[str] = []

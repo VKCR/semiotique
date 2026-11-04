@@ -3,7 +3,7 @@
   - Personal note taker demo
 - Add the possibility to include tools, such that you have a "fallback" for the agentic loop which is just to call S with tools
   - And add the possibility to set reasoning.
-- Autowrap the methods of Agent derived classes to make them tool compatible, in the Agent abstract class, for example suffixing `_tool`
+  - Autowrap the methods of Agent derived classes to make them tool compatible, in the Agent abstract class, for example suffixing `_tool`
 - Move the context curation strategy into its own method of runtime class
 - Move calling the LLM client into its own method of runtime class
   - And implement the split between using a generic LLM and using a decision model
@@ -40,8 +40,6 @@
         - Facts, with different categories.
       - THE CODE SHOULD BE VERY STRAIGHTFORWARD
         - Easily human-legible
-  - Base type for a note:
-    - ID | timestamp | categories | links to other notes | content | embedding
   - WHEN INSERTING => autosuggest integrations (links / categories / merging)
   - WHEN READING => autosuggest exploring similar things / summaries / hardcoded strategy for searching such as giving more weight to keyword results vs linked vs categorized
 

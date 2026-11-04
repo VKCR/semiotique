@@ -42,4 +42,15 @@
         - Easily human-legible
   - Base type for a note:
     - ID | timestamp | categories | links to other notes | content | embedding
+  - CREATE A DUMMY DB BEFORE I IMPLEMENT THE AGENTS
+    - This way I can test the app as I go along
+  - LEFT TO DO IN NOTEDB
+    - Then read methods
+      - By ids
+      - By categories
+      - By keyword search
+      - By embeddings
+      - Cluster from link graph
+  - WHEN INSERTING => autosuggest integrations (links / categories / merging)
+  - WHEN READING => autosuggest exploring similar things / summaries / hardcoded strategy for searching such as giving more weight to keyword results vs linked vs categorized
 

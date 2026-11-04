@@ -10,6 +10,28 @@ from notetaker import notedb
 from notetaker.models import Note
 from notetaker.utils import compute_embedding
 
+def test_db():
+    print("\nget_note_by_ids:")
+    for note in notedb.get_note_by_ids(["reading-002", "reading-006"]):
+        print(f"ID: {note.id}")
+        print(f"Created at: {note.created_at.isoformat()}")
+        print(f"Categories: {note.categories}")
+        print(f"Linked IDs: {note.linked_ids}")
+        print(f"Content: {note.content}")
+        print(f"Embedding dimensions: {len(note.embedding)}")
+
+    print("\nget_note_ids_by_category('politics'):")
+    print(notedb.get_note_ids_by_category("politics"))
+
+    print("\nget_note_ids_by_keyword('trust'):")
+    print(notedb.get_note_ids_by_keyword("trust"))
+
+    print("\nget_linked_note_ids('reading-002'):")
+    print(notedb.get_linked_note_ids("reading-001"))
+
+    print("\nget_similar_note_ids('reading-002', n=5):")
+    for note_id, similarity in notedb.get_similar_note_ids("reading-001", n=5):
+        print(f"{note_id}: {similarity:.4f}")
 
 def load_into_db() -> None:
     """Reset the database, then insert examples with their original IDs and timestamps."""

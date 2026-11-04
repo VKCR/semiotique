@@ -1,5 +1,4 @@
-from demo.demo_agent import demo, demo2 #, demo3
+from notetaker.app import app
 
 if __name__ == "__main__":
-    demo()
-    demo2()
+    app()

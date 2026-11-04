@@ -49,6 +49,15 @@ def _row_to_note(
     )
 
 
+def drop_db() -> None:
+    """Drop all application tables and their data, including vector storage."""
+    with _connect() as connection, connection:
+        connection.execute("DROP TABLE IF EXISTS links")
+        connection.execute("DROP TABLE IF EXISTS categories")
+        connection.execute("DROP TABLE IF EXISTS note_embeddings")
+        connection.execute("DROP TABLE IF EXISTS notes")
+
+
 def init_db() -> None:
     """Create the notes, embeddings, links, and categories tables."""
     with _connect() as connection, connection:

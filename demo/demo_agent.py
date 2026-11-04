@@ -43,9 +43,9 @@ def demo():
     dog = Animal("dog")
     cat = Animal("cat")
     pet_owner = Person("Pet owner")
-    unknown_burglar = Person("Unknown person")
+    suspicious_stranger = Person("A suspicious stranger")
 
-    for person in (pet_owner, unknown_burglar):
+    for person in (pet_owner, suspicious_stranger):
         for animal in (dog, cat):
             person.approach_pet(animal)
 

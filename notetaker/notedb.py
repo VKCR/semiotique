@@ -145,6 +145,15 @@ def get_note_by_ids(note_ids: list[str]) -> list[Note]:
     ]
 
 
+def get_categories() -> list[str]:
+    """Return all distinct categories in alphabetical order."""
+    with _connect() as connection:
+        rows = connection.execute(
+            "SELECT DISTINCT category FROM categories ORDER BY category"
+        ).fetchall()
+    return [row["category"] for row in rows]
+
+
 def get_note_ids_by_category(category: str) -> list[str]:
     """Fetch all note IDs associated with a category."""
     with _connect() as connection:

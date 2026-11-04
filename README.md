@@ -1,8 +1,9 @@
 # semiotique
 - Build a small demo
   - Personal note taker demo
+- FAR: add the possibility to configure reasoning in runtime
+  - Dynamic switching based on task complexity?
 - Add the possibility to include tools, such that you have a "fallback" for the agentic loop which is just to call S with tools
-  - And add the possibility to set reasoning.
   - Autowrap the methods of Agent derived classes to make them tool compatible, in the Agent abstract class, for example suffixing `_tool`
 - Move the context curation strategy into its own method of runtime class
 - Move calling the LLM client into its own method of runtime class

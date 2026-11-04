@@ -1,19 +1,22 @@
 import os
 from contextlib import contextmanager
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any
 
 from dotenv import load_dotenv
-from openrouter import OpenRouter
-from pydantic import create_model
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelMessage
+from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
+from pydantic_ai.providers.openrouter import OpenRouterProvider
 
 
 class Semiotique:
     def __init__(self):
         load_dotenv()
-        self.client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
+        self.provider = OpenRouterProvider(api_key=os.getenv("OPENROUTER_API_KEY"))
         self.model = "openai/gpt-6-luna"
         self.context: list[str] = []
-        self.messages: list[dict[str, str]] = []
+        self.messages: list[ModelMessage] = []
         self.is_memory_active: bool = False
 
     def _push_context(self, context: str) -> None:
@@ -43,45 +46,34 @@ class Semiotique:
             self.is_memory_active = False
             self.messages.clear()
 
-    def __call__(self, value: str, *, output_type: type = str):
+    def __call__(
+        self,
+        value: str,
+        *,
+        output_type: type = str,
+        tools: Sequence[Callable[..., Any]] = (),
+    ):
         if not isinstance(output_type, type):
             raise TypeError("output_type must be a type")
 
         system_prompt = "\n\n".join(self.context)
 
-        # An object envelope supports scalar, collection, and custom output types.
-        output_model = create_model("Output", value=(output_type, ...))
-        response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "output",
-                "schema": output_model.model_json_schema(),
-            },
-        }
-
-        user_message = {"role": "user", "content": value}
-        if self.is_memory_active:
-            self.messages.append(user_message)
-            conversation = self.messages
-        else:
-            conversation = [user_message]
-
-        response = self.client.chat.send(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                *conversation,
-            ],
-            response_format=response_format,
-            provider={"require_parameters": True},
+        agent = Agent(
+            OpenRouterModel(self.model, provider=self.provider),
+            instructions=system_prompt,
+            output_type=output_type,
+            tools=tools,
+            model_settings=OpenRouterModelSettings(
+                openrouter_provider={"require_parameters": True},
+            ),
         )
-        if not response.choices or response.choices[0].message.content is None:
-            raise ValueError("OpenRouter returned no text output")
-
-        content = response.choices[0].message.content
+        result = agent.run_sync(
+            value,
+            message_history=self.messages if self.is_memory_active else None,
+        )
         if self.is_memory_active:
-            self.messages.append({"role": "assistant", "content": content})
-        return output_model.model_validate_json(content).value
+            self.messages[:] = result.all_messages()
+        return result.output
 
 
 S = Semiotique()

@@ -38,3 +38,15 @@ def demo3():
         print(S("My name is Bob, and I am 30 years old. What is your name?"))
         print(S("What is my name?"))
         print(S("What is my age?"))
+
+def demo4():
+    def get_weather(city: str) -> str:
+        """Return weather conditions for a city.
+
+        Args:
+            city: The name of the city to get weather for.
+        """
+        return "Raining"
+
+    print(S("What's the weather in Paris?", tools=[get_weather]))
+

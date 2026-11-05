@@ -1,25 +1,18 @@
-from enum import Enum
+from typing import Literal
 
 from semiotique.semiotique import S
 
 
 def demo():
-    class AnimalType(str, Enum):
-        MAMMAL = "mammal"
-        BIRD = "bird"
-        FISH = "fish"
-        REPTILE = "reptile"
-        AMPHIBIAN = "amphibian"
-        INVERTEBRATE = "invertebrate"
-        OTHER = "other"
-
     animal = input("What kind of animal do you have? ")
     animal_type = S(
         f"Classify the type of animal {animal}?",
-        output_type=AnimalType,
+        output_type=Literal[
+            "mammal", "bird", "fish", "reptile", "amphibian", "invertebrate", "other"
+        ],
     )
 
-    if animal_type == AnimalType.MAMMAL and S(f"Determine if the kind/type of animal \"{animal}\" is a kind/type of dog or cat", output_type=bool):
+    if animal_type == "mammal" and S(f"Determine if the kind/type of animal \"{animal}\" is a kind/type of dog or cat", output_type=bool):
         print(f"We are able to treat your {animal}")
     else:
         print(f"We are not able to treat your {animal}")

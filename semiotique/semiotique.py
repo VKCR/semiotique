@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.models.openrouter import OpenRouterModel, OpenRouterModelSettings
+from pydantic_ai.output import OutputSpec
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 
 
@@ -52,12 +53,9 @@ class Semiotique:
         self,
         value: str,
         *,
-        output_type: type = str,
+        output_type: OutputSpec[Any] = str,
         tools: Sequence[Callable[..., Any]] = (),
     ):
-        if not isinstance(output_type, type):
-            raise TypeError("output_type must be a type")
-
         system_prompt = "\n\n".join(self.context)
 
         agent = Agent(

@@ -29,8 +29,10 @@ def test_db():
     print("\nget_linked_note_ids('reading-002'):")
     print(notedb.get_linked_note_ids("reading-001"))
 
-    print("\nget_similar_note_ids('reading-002', n=5):")
-    for note_id, similarity in notedb.get_similar_note_ids("reading-001", n=5):
+    print("\nget_similar_note_ids('Conformity and social pressure', n=5):")
+    for note_id, similarity in notedb.get_similar_note_ids(
+        "Conformity and social pressure", n=5
+    ):
         print(f"{note_id}: {similarity:.4f}")
 
 def load_into_db() -> None:

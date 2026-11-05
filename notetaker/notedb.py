@@ -247,38 +247,35 @@ def get_linked_note_ids(note_id: str) -> list[str]:
     return [row["note_id"] for row in rows]
 
 
-def get_similar_note_ids(note_id: str, n: int = 10) -> list[tuple[str, float]]:
-    """Find notes with content semantically similar to an existing note.
+def get_similar_note_ids(content: str, n: int = 10) -> list[tuple[str, float]]:
+    """Find notes whose embeddings are most similar to the supplied text's embedding.
 
     Args:
-        note_id: ID of an existing note whose embedding is used for the search.
-        n: Maximum number of other notes to return. Must be a positive integer;
+        content: Text to compute an embedding for and use as the semantic search
+            query. Does not need to match an existing note and is not stored.
+        n: Maximum number of notes to return. Must be a positive integer;
             defaults to 10.
 
     Returns:
         Pairs of note ID and cosine similarity score, ordered from most to least
-        similar. Higher scores indicate greater similarity. Excludes the source
-        note and may return fewer than n results. Use get_note_by_ids to retrieve
-        the matching notes.
+        similar. Higher scores indicate greater similarity. May return fewer
+        than n results. Use get_note_by_ids to retrieve the matching notes.
     """
+    embedding = compute_embedding(content)
     with _connect() as connection:
         rows = connection.execute(
             """
             WITH nearest AS MATERIALIZED (
                 SELECT note_id, distance
                 FROM note_embeddings
-                WHERE embedding MATCH (
-                    SELECT embedding FROM note_embeddings WHERE note_id = ?
-                )
+                WHERE embedding MATCH ?
                 AND k = ?
             )
             SELECT note_id, 1.0 - distance AS similarity
             FROM nearest
-            WHERE note_id != ?
             ORDER BY distance
-            LIMIT ?
             """,
-            (note_id, n + 1, note_id, n),
+            (struct.pack(f"{EMBEDDING_DIMENSIONS}f", *embedding), n),
         ).fetchall()
     return [(row["note_id"], row["similarity"]) for row in rows]
 

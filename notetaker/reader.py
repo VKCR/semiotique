@@ -15,10 +15,6 @@ class GetNoteByIds(BaseModel):
     note_ids: list[str]
 
 
-class GetCategories(BaseModel):
-    kind: Literal["GET_CATEGORIES"]
-
-
 class GetNoteIdsByCategory(BaseModel):
     kind: Literal["GET_NOTE_IDS_BY_CATEGORY"]
     category: str
@@ -55,11 +51,27 @@ class NoteTakerReader(Agent[None]):
         self.ui = ui
 
     def __call__(self, prompt: str, **kwargs) -> None:
+        wants_categories = S(
+            "Determine whether the user explicitly requests listing all "
+            "categories in the knowledge base. Return true only for a clear "
+            "request to list category names, including when combined with "
+            "other requests. Return false for requests only to find notes in "
+            "a category or for ambiguous messages. Do not answer the prompt.\n\n"
+            f"User prompt:\n{prompt}",
+            output_type=bool,
+        )
+        if wants_categories:
+            categories = self.get_categories()
+            self.ui.display(
+                "Categories:\n" + "\n".join(f"- {category}" for category in categories)
+                if categories
+                else "No categories were found."
+            )
+
         operations = S(
             "Extract the knowledge base read operations requested by the user "
             "as function tokens with their arguments. Use these operations:\n"
             "- GET_NOTE_BY_IDS(note_ids): retrieve notes by known IDs.\n"
-            "- GET_CATEGORIES(): list all category names.\n"
             "- GET_NOTE_IDS_BY_CATEGORY(category): find IDs by exact category, "
             "including case.\n"
             "- GET_NOTE_IDS_BY_KEYWORD(keyword): find IDs by a literal, "
@@ -74,6 +86,7 @@ class NoteTakerReader(Agent[None]):
             "depend on earlier results. Set theme to a list of topics from the "
             "request when available; otherwise leave it null.\n"
             "First identify the distinct items the user explicitly requests. "
+            "Ignore requests to list category names; those are handled separately. "
             "Produce exactly one action token per requested item, choosing the "
             "single operation that best matches it. Multiple tokens are allowed "
             "only for separately requested items. Do not produce alternative "
@@ -94,8 +107,9 @@ class NoteTakerReader(Agent[None]):
             "GET_NOTE_IDS_BY_KEYWORD token; no additional semantic search.\n"
             "- 'Summarize what my notes say about sleep': one SEARCH_NOTES "
             "token with theme ['sleep']; no additional search token.\n"
-            "- 'List categories and show note abc': one GET_CATEGORIES token "
-            "and one GET_NOTE_BY_IDS token with note_ids ['abc'].\n"
+            "- 'List categories and show note abc': one GET_NOTE_BY_IDS token "
+            "with note_ids ['abc'].\n"
+            "- 'List all categories': an empty list.\n"
             "Only include operations "
             "whose arguments are available from the prompt; do not invent IDs, "
             "category names, or results of other operations. Return an empty "
@@ -104,7 +118,6 @@ class NoteTakerReader(Agent[None]):
             f"User prompt:\n{prompt}",
             output_type=list[
                 GetNoteByIds
-                | GetCategories
                 | GetNoteIdsByCategory
                 | GetNoteIdsByKeyword
                 | GetLinkedNoteIds
@@ -112,22 +125,11 @@ class NoteTakerReader(Agent[None]):
                 | SearchNotes
             ],
         )
-        if any(isinstance(token, GetCategories) for token in operations):
-            categories = self.get_categories()
-            self.ui.display(
-                "Categories:\n" + "\n".join(f"- {category}" for category in categories)
-                if categories
-                else "No categories were found."
-            )
-
-        note_operations = [
-            token for token in operations if not isinstance(token, GetCategories)
-        ]
-        if not note_operations:
+        if not operations:
             return
 
         fetched_notes: list[Note] = []
-        for token in note_operations:
+        for token in operations:
             match token:
                 case GetNoteByIds():
                     fetched_notes.extend(self.get_note_by_ids(token))

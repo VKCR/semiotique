@@ -45,6 +45,9 @@
     - what are the fallbacks? 
       - deleting a note
       - deleting a link between two notes
+        - what about deleting all links? Or shit like that?
+        - How to figure it out?
+          - Complex case => delete and recreate. With the same id. It should autocascade link deletion
       - adding / deleting a category
     - what are the custom implementations?
       - inserting a note, or managing notes

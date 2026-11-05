@@ -341,6 +341,22 @@ def insert_categories(note_id: str, categories: list[str]) -> None:
         )
 
 
+def delete_category(note_id: str, category: str) -> None:
+    """Remove a single category assignment from a note.
+
+    Does nothing if the note does not have the category.
+
+    Args:
+        note_id: ID of the note whose category assignment should be removed.
+        category: Category name to remove, matched exactly, including case.
+    """
+    with _connect() as connection, connection:
+        connection.execute(
+            "DELETE FROM categories WHERE note_id = ? AND category = ?",
+            (note_id, category),
+        )
+
+
 def delete_categories(note_id: str) -> None:
     """Remove every category assignment from a note, preserving the note itself.
 
@@ -371,6 +387,23 @@ def insert_links(links: list[tuple[str, str]]) -> None:
         connection.executemany(
             "INSERT INTO links (note_id_1, note_id_2) VALUES (?, ?)",
             (tuple(sorted(link)) for link in links),
+        )
+
+
+def delete_link(note_id_1: str, note_id_2: str) -> None:
+    """Remove a single bidirectional link between two notes.
+
+    The IDs can be supplied in either order. Does nothing if the link does
+    not exist.
+
+    Args:
+        note_id_1: ID of one linked note.
+        note_id_2: ID of the other linked note.
+    """
+    with _connect() as connection, connection:
+        connection.execute(
+            "DELETE FROM links WHERE note_id_1 = ? AND note_id_2 = ?",
+            tuple(sorted((note_id_1, note_id_2))),
         )
 
 

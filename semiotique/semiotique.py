@@ -32,6 +32,11 @@ class Semiotique:
 
     @contextmanager
     def with_context(self, context: str) -> Iterator[None]:
+        # Prevent duplicate context when an Agent's method calls another method of the same Agent.
+        if self.context and self.context[-1] == context:
+            yield
+            return
+
         self._push_context(context)
         try:
             yield

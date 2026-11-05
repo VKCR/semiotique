@@ -42,9 +42,47 @@
       - THE CODE SHOULD BE VERY STRAIGHTFORWARD
         - Easily human-legible
   - WHEN INSERTING => autosuggest integrations (links / categories / merging)
-  - WHEN READING => autosuggest exploring similar things / summaries / hardcoded strategy for searching such as giving more weight to keyword results vs linked vs categorized
+    - what are the fallbacks? 
+      - deleting a note
+      - deleting a link between two notes
+      - adding / deleting a category
+    - what are the custom implementations?
+      - inserting a note, or managing notes
+      - These two flows are semi-distinct
+        - When inserting a note, add "intelligence" by proposing categories and links, or even merging with another note
+        - For refactoring : if it concerns a single note => delete and recreate (deterministically), and use same flow as insertion
+        - If it concerns multiple notes => is it about processing them individually? Then run the refactoring on each of them. Is it about processing them collectively, aka merging them? Then delete them and recreate a note (deterministically), and use the same flow as for insertion
+          - Or perhaps, in this case, DELEGATE TO AGENT. Have a NOTE STRUCTURED OUTPUT!
+          - YES THAT'S THE SOLUTION - LET THE AI DO ITS STUFF, HAVE THE HUMAN VALIDATE WITH FEEDBACK / MODIFICATIONS, AND THEN RUN THE INSERTION FLOW ON THE RESULTING NOTES
+          - In both the individual modified note case, and the multiple modified notes case, the logic should be the same
+            - And leverage Reader's search ability to fetch the notes under consideration
+              - Add an "interactive" flag 
+              - Or actually, create a new method altogether
+                - And re-use in the interactive one
+        - Always have human in the loop verification
+          - When inserting => Are you sure with this content? With these links? With blablabla
+          - When modifying => Are you satisfied with the new modified / merged note?
+    - That's fairly straightforward
+    - Also, can suggest merging 
+    - Basically you'd have an insertion flow, a refactoring flow, etc. 
+- TLDR READER
+  - NEW IDEA : there can be several sub-requests ; match each one with an "action token", which you then execute, and then you merge all of the results in the end.
+    - And you clearly output what you've searched for
+    - So forget the agentic paradigm
+  - INVERT THE AGENTIC PARADIGM
+    - TODAY => GIVE TOOLS TO THE AGENT AND IT CALLS THEM AND MERGES THE RESULT
+    - TOMORROW => THE AGENT TELLS YOU WHAT TO CALL, AND THEN YOU DEMERDE YOURSELF
+  - Same thing for the writer.
+- Add a help / instructions action token, in the top-level agent
+- Remove allowing tool call when calling the LLM?
+- FAR : create a standard library for repeated patterns
+  - Routing
+  - Matching
+  - Mapping
+  - Extracting
+  - Standard prompts, such as awaiting a "yes / no" answer
+  - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
 - FAR : improve perf
   - Obviously don't be a wrapper around pydantic-ai
   - Parallelization
   - Use Jev for classification tasks
-

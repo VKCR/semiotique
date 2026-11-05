@@ -29,7 +29,7 @@ class NoteTaker(Agent[None]):
         self.reader = reader
 
     def __call__(
-        self, prompt: str = "What would you like to do with your notes?", **kwargs
+        self, prompt: str = "\nWhat would you like to do with your notes?", **kwargs
     ) -> None:
         instruction = self.ui.ask(prompt)
         instruction_type = S(

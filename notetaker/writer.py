@@ -374,10 +374,8 @@ class NoteTakerWriter(Agent[None]):
         if not skip_prompt_construction:
             note_ids = S(
                 "Extract only note IDs explicitly specified in the user's "
-                "refactoring instructions. Preserve the exact IDs. When no "
-                "IDs are supplied, return an empty array [], with no elements. "
-                "Do not return the string \"[]\" as a list element. "
-                "Do not invent IDs or execute "
+                "refactoring instructions. Preserve the exact IDs. Return an "
+                "empty list if none are supplied. Do not invent IDs or execute "
                 "the instructions.\n\n"
                 f"Instructions:\n{instructions}",
                 output_type=list[str],
@@ -398,8 +396,13 @@ class NoteTakerWriter(Agent[None]):
                     theme=themes,
                 )
                 found_notes = self.reader.search_notes(search)
+
+                if not found_notes:
+                    self.ui.display("Didn't find any relevant notes.")
+                    return
+
                 note_ids = [note.id for note in found_notes]
-                notes = notedb.get_note_by_ids(note_ids) if note_ids else []
+                notes = notedb.get_note_by_ids(note_ids)
                 instructions = S(
                     "Rewrite the user's refactoring instructions into clear "
                     "instructions for a refactoring planner, incorporating "

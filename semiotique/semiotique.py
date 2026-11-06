@@ -78,6 +78,8 @@ class Semiotique:
         )
         if self.is_memory_active:
             self.messages[:] = result.all_messages()
+        if output_type == list[str] and result.output == ["[]"]:
+            return []
         return result.output
 
 

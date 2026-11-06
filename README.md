@@ -1,4 +1,7 @@
 # semiotique
+- TODO:
+  - Test out thoroughly the insertion and refactoring flows of the note taking app
+  - Re-write this README + write a README for the Semiotique runtime + write a README for the note taking app
 - Runtime improvements
   - Change the name "value" of the parameter to semiotique __call__ method
   - Move the context curation strategy into its own method of runtime class

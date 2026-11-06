@@ -1,96 +1,37 @@
 # semiotique
-- Build a small demo
-  - Personal note taker demo
-- FAR: add the possibility to configure reasoning in runtime
-  - Dynamic switching based on task complexity?
-- Add the possibility to include tools, such that you have a "fallback" for the agentic loop which is just to call S with tools
-  - Autowrap the methods of Agent derived classes to make them tool compatible, in the Agent abstract class, for example suffixing `_tool`
-- Move the context curation strategy into its own method of runtime class
-- Move calling the LLM client into its own method of runtime class
-  - And implement the split between using a generic LLM and using a decision model
-- Change the name "value" of the parameter to semiotique __call__ method
-- Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
-  - Include that in the README
-- Notetaker app implementation
-  - Have two base classes, which will also act as the fallback class, one for reading and one for writing with the following primitives:
-    - Writing
-      - Create a new note
-      - Update a note by ID
-      - Delete a note by ID
-    - Reading
-      - Get a note by ID
-      - Get similar notes by embedding
-        - INSIGHT : reword the request in this case, to maximize embedding similarity
-          - In the parent method
-      - Search notes by keyword
-      - Get notes by category(s)
-      - Get notes by link to root note
-    - Then have a smart writing class
-    - WHAT KINDS OF BEHAVIORS DO WE WANT TO IMPLEMENT
-      - Writing
-        - I add a note, and it automagically integrates it into my knowledge base
-          - Autosuggests categories, links, merging with another note
-            - But always need human validation for doing so
-      - Reading
-        - Answer vague queries on the KB, leveraging different strategies
-        - First, if there are any obvious ones => fallback to relevant ones
-        - Then, for vague one, implement successive RAG-like approach, with human in the loop, for iterative exploration
-      - In both cases : user feedback is important in all cases.
-      - NEED TO HAVE AN EXAMPLE DB FILE
-        - What kinds of notes?
-        - Facts, with different categories.
-      - THE CODE SHOULD BE VERY STRAIGHTFORWARD
-        - Easily human-legible
-  - WHEN INSERTING => autosuggest integrations (links / categories / merging)
-    - what are the fallbacks? 
-      - deleting a note
-      - deleting a link between two notes
-        - what about deleting all links? Or shit like that?
-        - How to figure it out?
-          - Complex case => delete and recreate. With the same id. It should autocascade link deletion
-      - adding / deleting a category
-    - what are the custom implementations?
-      - inserting a note, or managing notes
-      - These two flows are semi-distinct
-        - When inserting a note, add "intelligence" by proposing categories and links, or even merging with another note
-        - For refactoring : if it concerns a single note => delete and recreate (deterministically), and use same flow as insertion
-        - If it concerns multiple notes => is it about processing them individually? Then run the refactoring on each of them. Is it about processing them collectively, aka merging them? Then delete them and recreate a note (deterministically), and use the same flow as for insertion
-          - Or perhaps, in this case, DELEGATE TO AGENT. Have a NOTE STRUCTURED OUTPUT!
-          - YES THAT'S THE SOLUTION - LET THE AI DO ITS STUFF, HAVE THE HUMAN VALIDATE WITH FEEDBACK / MODIFICATIONS, AND THEN RUN THE INSERTION FLOW ON THE RESULTING NOTES
-          - In both the individual modified note case, and the multiple modified notes case, the logic should be the same
-            - And leverage Reader's search ability to fetch the notes under consideration
-              - Add an "interactive" flag 
-              - Or actually, create a new method altogether
-                - And re-use in the interactive one
-        - Always have human in the loop verification
-          - When inserting => Are you sure with this content? With these links? With blablabla
-          - When modifying => Are you satisfied with the new modified / merged note?
-    - That's fairly straightforward
-    - Also, can suggest merging 
-    - Basically you'd have an insertion flow, a refactoring flow, etc. 
-- TLDR READER
-  - NEW IDEA : there can be several sub-requests ; match each one with an "action token", which you then execute, and then you merge all of the results in the end.
-    - And you clearly output what you've searched for
-    - So forget the agentic paradigm
-  - INVERT THE AGENTIC PARADIGM
-    - TODAY => GIVE TOOLS TO THE AGENT AND IT CALLS THEM AND MERGES THE RESULT
-    - TOMORROW => THE AGENT TELLS YOU WHAT TO CALL, AND THEN YOU DEMERDE YOURSELF
-  - Same thing for the writer.
-- Add a help / instructions action token, in the top-level agent
-- Remove allowing tool call when calling the LLM?
-- FAR : create a standard library for repeated patterns
-  - Routing
-  - Matching
-  - Mapping
-  - Extracting
-  - Standard prompts, such as awaiting a "yes / no" answer
-  - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
-- FAR : improve perf
-  - Obviously don't be a wrapper around pydantic-ai
-  - Parallelization
-  - Use Jev for classification tasks
-- TODO: TEST OUT THE NOTE TAKER APP
-- Give some examples
-  - Complex querying
-  - Adding a new note, with the category / link flow
-  - Merge all notes relevant to language
+- Runtime improvements
+  - Change the name "value" of the parameter to semiotique __call__ method
+  - Move the context curation strategy into its own method of runtime class
+  - Move calling the LLM client into its own method of runtime class
+  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
+    - This would be the first step of a "dashboard" to monitor LLM usage
+    - Include that in the README
+  - Use Jev / other decision model when the structure output is an enum
+  - Add the possibility to configure reasoning in runtime
+  - Dynamic switching of model and reasoning mode based on task complexity
+  - Open question : 
+    - Keep allowing tool use when calling the LLM?
+    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
+  - FAR : create a standard library for repeated patterns
+    - Routing
+    - Matching
+    - Mapping
+    - Extracting
+    - Standard prompts, such as awaiting a "yes / no" answer
+    - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
+      - Use an LLM to construct prompts?
+  - FAR : improve perf
+    - Obviously don't be a wrapper around pydantic-ai
+    - Parallelization
+- Notetaker app improvements
+  - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
+  - README : emphasize the SMART and TANGLED (human in the loop) nature of the app, and how it makes it differ from the standard agent loop + tools
+    - Emphasize the "action token" paradigm I have introduced, which inverts the agentic loop, giving you the ability to run deterministic code between different "tool calls" (or rather decision by the agent of what methods to run)
+    - Give some usage examples
+      - Complex querying
+      - Adding a new note, with the category / link flow
+      - Merge all notes relevant to language
+  - GOAL : The code should be straightforward and easily legible
+    - The goal is to progressively co-improve it as I improve the Semiotique SDK
+  - Add a "help" method to top-level notetakeragent which prints how to use the app
+  - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search

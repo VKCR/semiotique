@@ -90,3 +90,7 @@
   - Obviously don't be a wrapper around pydantic-ai
   - Parallelization
   - Use Jev for classification tasks
+- Give some examples
+  - Complex querying
+  - Adding a new note, with the category / link flow
+  - Merge all notes relevant to language

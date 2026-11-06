@@ -10,8 +10,8 @@ def app() -> None:
     # load_into_db()
 
     with UserInterface() as ui:
-        writer = NoteTakerWriter(ui)
         reader = NoteTakerReader(ui)
+        writer = NoteTakerWriter(ui, reader=reader)
         notetaker = NoteTaker(ui, writer=writer, reader=reader)
         while True:
             notetaker()

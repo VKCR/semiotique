@@ -76,6 +76,7 @@
     - TODAY => GIVE TOOLS TO THE AGENT AND IT CALLS THEM AND MERGES THE RESULT
     - TOMORROW => THE AGENT TELLS YOU WHAT TO CALL, AND THEN YOU DEMERDE YOURSELF
   - Same thing for the writer.
+- TODO: TEST OUT THE NOTE TAKER APP
 - Add a help / instructions action token, in the top-level agent
 - Remove allowing tool call when calling the LLM?
 - FAR : create a standard library for repeated patterns

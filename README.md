@@ -1,40 +1,118 @@
-# semiotique
-- TODO:
-  - Test out thoroughly the insertion and refactoring flows of the note taking app
-  - Re-write this README + write a README for the Semiotique runtime + write a README for the note taking app
-- Runtime improvements
-  - Change the name "value" of the parameter to semiotique __call__ method
-  - Move the context curation strategy into its own method of runtime class
-  - Move calling the LLM client into its own method of runtime class
-  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
-    - This would be the first step of a "dashboard" to monitor LLM usage
-    - Include that in the README
-  - Use Jev / other decision model when the structure output is an enum
-  - Add the possibility to configure reasoning in runtime
-  - Dynamic switching of model and reasoning mode based on task complexity
-  - Open question : 
-    - Keep allowing tool use when calling the LLM?
-    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
-  - FAR : create a standard library for repeated patterns
-    - Routing
-    - Matching
-    - Mapping
-    - Extracting
-    - Standard prompts, such as awaiting a "yes / no" answer
-    - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
-      - Use an LLM to construct prompts?
-  - FAR : improve perf
-    - Obviously don't be a wrapper around pydantic-ai
-    - Parallelization
-- Notetaker app improvements
-  - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
-  - README : emphasize the SMART and TANGLED (human in the loop) nature of the app, and how it makes it differ from the standard agent loop + tools
-    - Emphasize the "action token" paradigm I have introduced, which inverts the agentic loop, giving you the ability to run deterministic code between different "tool calls" (or rather decision by the agent of what methods to run)
-    - Give some usage examples
-      - Complex querying
-      - Adding a new note, with the category / link flow
-      - Merge all notes relevant to language
-  - GOAL : The code should be straightforward and easily legible
-    - The goal is to progressively co-improve it as I improve the Semiotique SDK
-  - Add a "help" method to top-level notetakeragent which prints how to use the app
-  - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search
+# Semiotique
+
+**Disclaimer:** I am actively looking for collaborators to improve this project and potentially turn it into a commercial venture. If you are interested, feel free to contact me at vivek.claver@gmail.com :) 
+
+## TLDR
+
+Semiotique aims to propose a new way to build "LLM-enhanced" applications, based on two core concepts : 
+- Allow seamless integration between LLM evaluations and "plain old code"
+- Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
+
+This project is still at a _very early stage_, and is still very rough around the edges. This README will provide an overview of the design philosophy, current implementation, and next steps. There are short demo examples in the /demo directory showcasing the basic syntax, and a more advanced example - a personal note-taking app - in the /notetaker directory, showcasing how Semiotique can be used to build applications (refer to /notetaker/README.md for more information about it)
+
+## Design Philosophy
+
+Most frameworks today for building agentic applications rely on the concept of the "agentic loop" : an LLM - enriched with tools & skills - is used as the main driver of the application, with the end goal of functioning fully autonomously. I believe that this is a mistake:
+- LLMs can make errors, and its outputs are non-deterministic and non-replicable
+- LLMs have no judgment / taste, are prone to sycophancy, and often make questionable assumptions in its reasoning.
+
+I believe that the above is due to fundamental limitations with LLMs, and will not be ever fixed through further scaling them.
+
+In addition, current frameworks are usually not very elegant to use : none of the tediousness of configuration and executing calls to LLMs is hidden. Many frameworks even require you to manually define a state machine (such as LangGraph).
+
+The fundamental design idea underlying Semiotique is to **invert the agentic loop** : rather than having an LLM black-box to which we provide (deterministic) tools, and then let "execute" the application based on a system prompt, we should aim to have an application _mostly_ written in deterministic code, with LLM evaluations sprinkled in where they would actually be useful (for tasks such as understanding natural language, outputting text, closed-ended reasoning, etc.)
+
+This leads to the two concepts already stated in the TLDR, namely that Semiotique should :
+- Allow seamless integration between LLM evaluations and "plain old code"
+- Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
+
+The goal of this project is to be an enabler for the development of new kinds of agentic applications.
+
+## Presentation
+
+### The S singleton
+
+Semiotique (today) is a "runtime" which allows to evaluate LLM-expressions from anywhere in your code, via the global singleton `S`
+
+For instance, you can use `S` to interact with an LLM : 
+
+```
+print(S("Hello! Who are you?"))
+```
+
+You can of course save the result of an LLM-expression to a variable
+
+```
+capital = S("What is the capital of France?")
+```
+
+You can use LLM-expressions anywhere, for example in a lambda mapping over a list : 
+```
+countries = ["France", "Italy", "Spain"]
+capitals = list(map(lambda country: S(f"What is the capital of {country}?"), countries))
+print(capitals) # prints ['Paris', 'Rome', 'Madrid']
+```
+
+The default return type is `str`, but you can specify any type, including custom types
+
+```
+print(S("Is Paris the capital of France?", output_type=bool)) # Prints true
+persian_cat = S("Fill in the Animal characteristics for a persian cat", output_type=Animal) # Structured output of Animal object
+```
+
+This allows you to use LLM-expressions in conditional structures
+
+```
+answer = input("What's the capital of France?")
+
+if S(f"Is {answer} the capital of France?", output_type=bool):
+  print("Correct")
+else:
+  print("Incorrect")
+```
+
+And
+
+```
+animal = input("What kind of animal do you have? ")
+animal_type = S(
+    f"Classify the type of animal {animal}?",
+    output_type=Literal[
+        "mammal", "bird", "fish", "reptile", "amphibian", "invertebrate", "other"
+    ],
+)
+
+match animal_type:
+  case "mammal": ...
+```
+
+You can also specify an enclosing context which will get re-used for nested LLM-expressions within the lexical scope
+
+```
+with S.with_context("Your name is Bob, and you are helpful coding assistant"):
+    print(S("Hello! What's your name")) # Will print Bob
+    print(S("What are you?")) # Will print "helpful coding assistant"
+```
+
+Contexts can be nested
+
+```
+with S.with_context("Your name is Bob, and you are helpful coding assistant"):
+    with S.with_context("Your first task is to present Semiotique to a new user"):
+        print(S("Help me!"))
+```
+
+Finally, you can also activate memory for nested LLM-expressions within a lexical scope
+
+```
+with S.with_memory():
+    print(S("My name is Bob, and I am 30 years old. What is your name?"))
+    print(S("What is my name?")) # Prints Bob
+    print(S("What is my age?")) # Prints 30
+```
+
+
+
+
+
+

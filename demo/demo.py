@@ -43,3 +43,9 @@ def demo4():
 
     print(S("What's the weather in Paris?", tools=[get_weather]))
 
+
+def demo5():
+    countries = ["France", "Italy", "Spain"]
+    capitals = list(map(lambda country: S(f"What is the capital of {country}?"), countries))
+    print(capitals)
+

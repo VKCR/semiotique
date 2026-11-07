@@ -132,7 +132,7 @@ while (True):
 
 However, the vision is to _not_ rely on the agent loop, which should be a fallback, but rather to have agents calling each other's methods just like "normal" objects.
 
-From inheriting from the Agent base class, any LLM-expression evaluated in an agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the Semiotique runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
+From inheriting from the Agent base class, any LLM-expression evaluated in an agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
 
 ```text
 +---------+     +---------+     +-----+
@@ -143,6 +143,8 @@ From inheriting from the Agent base class, any LLM-expression evaluated in an ag
 ```
 
 As of now, context chaining is implemented in a very rudimentary manner : the docstrings of the Agents are simply concatenated and used as the system prompt when calling the LLM. However, in the future, the goal is to develop more sophisticated context management.
+
+The goal of context chaining is to provide flexibility and allow for an agent's methods to be used for different tasks. For instance, agent B's method could be generic enough that it would produce different outputs when called by agent A, or by another agent C, since the context provided to its LLM-expressions will be different in both cases.
 
 ## Next steps and ideas
 
@@ -159,12 +161,12 @@ First off, the runtime is super rudimentary. Things to add :
   - Having a way to trace and debug calls made to LLMs
   - Dumping and restoring state (esp. the chained agent contexts)
   - Better handling of LLM calls : retries, output validation, error handling, failure recovery, etc.
-- More sophisticated context curation when chaining agent contexts
-  - I have the intuition that the chained context should itself be curated by an LLM.
+- More sophisticated context curation when chaining agent contexts, as right now it's incredibly basic
+  - I have the intuition that the chained context should itself be processed by an LLM
 
 Then, here are a few ideas on how to evolve the project:
 - Right now, it is a library, but perhaps it would be better implemented as a new programming language (or superset of a programming language) ; this would reduce unecessary verbosity (for example, it would be nice to be able to figure out output_type through type inference instead of having to specify it explicitly)
-- Related to the above, we could even imagine having a preprocessor automatically generate the prompts (perhaps from a base prompt) where relevant : for example, for a task which is obviously a classification task (in a match, let's say), the preprocessor would generate the relevant prompt automagically.
+- Related to the above, we could even imagine having a preprocessor automatically generate the prompts (perhaps from a base prompt) where relevant : for example, for a task which is obviously a classification task (switch statement), the preprocessor would generate the relevant prompt automagically.
 - There should be a "standard library" of common workflows, such as classifiers, routers, etc.
 
 More to come!

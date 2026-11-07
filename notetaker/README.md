@@ -1,1 +1,1 @@
-TODO!
+The interesting files to read are : notetakeragent.py, writer.py, and reader.py

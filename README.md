@@ -132,13 +132,33 @@ while (True):
 
 From inheriting from the Agent base class, any LLM-expression evaluated in the derived agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the Semiotique runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
 
-SHOW DIAGRAM OF CONTEXT CHAINING
+```text
++---------+     +---------+     +-----+
+| Agent A | --> | Agent B | --> | S() |
++---------+     +---------+     +-----+
+                                  |
+                   Prompt contains Agent A and Agent B docstrings
+```
 
-Say how it's implemented right now, aka super simple
+As of now, context chaining is implemented in a very straightforward manner : the docstrings of the Agents are simply concatenated and used as the system prompt when calling the LLM. However, in the future, the goal is to develop more sophisticated context management.
 
 ## Next steps and ideas
-As this project is very early stage, there's still a lot of room for improvement. Off the top of my head: 
-- 
 
+This project is still at a very early stage, and there is lots of room for improvement.
+
+First off, the runtime is super rudimentary. Things to add : 
+- Perf improvements
+  - Batching LLM calls (especially for map operations)
+  - Parallelization of LLM calls
+  - Async LLM calls
+  - Switching between generic / decision models depending on the task
+- Observability, debuggability, traceability
+  - Having a way to configure the runtime
+  - Having a way to trace and debug calls made to LLMs
+  - Dumping and restoring state (esp. the chained Agent contexts)
+  - Better handling of LLM calls : retries, output validation, error handling, failure recovery, etc.
+- More sophisticated context chaining of agent contexts
+
+More coming soon!
 
 

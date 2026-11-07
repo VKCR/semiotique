@@ -38,18 +38,18 @@ Semiotique (today) is a "runtime" which allows to evaluate LLM-expressions from 
 
 For instance, you can use `S` to interact with an LLM : 
 
-```
+```python
 print(S("Hello! Who are you?"))
 ```
 
 You can of course save the result of an LLM-expression to a variable
 
-```
+```python
 capital = S("What is the capital of France?")
 ```
 
 You can use LLM-expressions anywhere, for example in a lambda mapping over a list : 
-```
+```python
 countries = ["France", "Italy", "Spain"]
 capitals = list(map(lambda country: S(f"What is the capital of {country}?"), countries))
 print(capitals) # prints ['Paris', 'Rome', 'Madrid']
@@ -57,14 +57,14 @@ print(capitals) # prints ['Paris', 'Rome', 'Madrid']
 
 The default return type is `str`, but you can specify any type, including custom types
 
-```
+```python
 print(S("Is Paris the capital of France?", output_type=bool)) # Prints true
 persian_cat = S("Fill in the Animal characteristics for a persian cat", output_type=Animal) # Structured output of Animal object
 ```
 
 This allows you to use LLM-expressions in conditional structures
 
-```
+```python
 answer = input("What's the capital of France?")
 
 if S(f"Is {answer} the capital of France?", output_type=bool):
@@ -75,7 +75,7 @@ else:
 
 And
 
-```
+```python
 animal = input("What kind of animal do you have? ")
 animal_type = S(
     f"Classify the type of animal {animal}?",
@@ -90,7 +90,7 @@ match animal_type:
 
 You can also specify an enclosing context which will get re-used for nested LLM-expressions within the lexical scope
 
-```
+```python
 with S.with_context("Your name is Bob, and you are helpful coding assistant"):
     print(S("Hello! What's your name")) # Will print Bob
     print(S("What are you?")) # Will print "helpful coding assistant"
@@ -98,7 +98,7 @@ with S.with_context("Your name is Bob, and you are helpful coding assistant"):
 
 Contexts can be nested
 
-```
+```python
 with S.with_context("Your name is Bob, and you are helpful coding assistant"):
     with S.with_context("Your first task is to present Semiotique to a new user"):
         print(S("Help me!"))
@@ -106,7 +106,7 @@ with S.with_context("Your name is Bob, and you are helpful coding assistant"):
 
 Finally, you can also activate memory for nested LLM-expressions within a lexical scope
 
-```
+```python
 with S.with_memory():
     print(S("My name is Bob, and I am 30 years old. What is your name?"))
     print(S("What is my name?")) # Prints Bob
@@ -123,7 +123,7 @@ When you create a new class which inherits from Agent, you must define its docst
 
 A basic agent loop can then be easily defined in a few lines : 
 
-```
+```python
 my_agent = MyAgent()
 while (True):
     prompt = input("Input your instructions")

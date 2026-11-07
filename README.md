@@ -18,7 +18,7 @@ Most frameworks today for building agentic applications rely on the concept of t
 - LLMs can make errors, and its outputs are non-deterministic and non-replicable
 - LLMs have no judgment / taste, are prone to sycophancy, and often make questionable assumptions in its reasoning.
 
-I believe that the above is due to fundamental limitations with LLMs, and will not be ever fixed through further scaling them.
+I believe that the above is due to fundamental limitations with LLMs, and will not ever be fixed through further scaling them.
 
 In addition, current frameworks are usually not very elegant to use : none of the tediousness of configuration and executing calls to LLMs is hidden. Many frameworks even require you to manually define a state machine (such as LangGraph).
 
@@ -121,7 +121,7 @@ Conceptually, Agents are meant to be the building blocks for agentic application
 
 When you create a new class which inherits from Agent, you must define its docstring describing the Agent's behavior, and you must redefine its \_\_call\_\_(self, prompt: str, **kwargs) method, which should define the Agent's behavior when called on an arbitrary prompt.
 
-A basic "agentic" loop can then be easily defined in a few lines : 
+A basic agent loop can then be easily defined in a few lines : 
 
 ```
 my_agent = MyAgent()
@@ -130,7 +130,9 @@ while (True):
     my_agent(prompt)
 ```
 
-From inheriting from the Agent base class, any LLM-expression evaluated in the derived agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the Semiotique runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
+However, the vision is to _not_ rely on the agent loop, which should be a fallback, but rather to have agents calling each other's methods just like "normal" objects.
+
+From inheriting from the Agent base class, any LLM-expression evaluated in an agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the Semiotique runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
 
 ```text
 +---------+     +---------+     +-----+
@@ -140,7 +142,7 @@ From inheriting from the Agent base class, any LLM-expression evaluated in the d
                    Prompt contains Agent A and Agent B docstrings
 ```
 
-As of now, context chaining is implemented in a very straightforward manner : the docstrings of the Agents are simply concatenated and used as the system prompt when calling the LLM. However, in the future, the goal is to develop more sophisticated context management.
+As of now, context chaining is implemented in a very rudimentary manner : the docstrings of the Agents are simply concatenated and used as the system prompt when calling the LLM. However, in the future, the goal is to develop more sophisticated context management.
 
 ## Next steps and ideas
 
@@ -152,13 +154,17 @@ First off, the runtime is super rudimentary. Things to add :
   - Parallelization of LLM calls
   - Async LLM calls
   - Switching between generic / decision models depending on the task
-- Observability, debuggability, traceability
+- Configuration, observability, debuggability, traceability
   - Having a way to configure the runtime
   - Having a way to trace and debug calls made to LLMs
-  - Dumping and restoring state (esp. the chained Agent contexts)
+  - Dumping and restoring state (esp. the chained agent contexts)
   - Better handling of LLM calls : retries, output validation, error handling, failure recovery, etc.
-- More sophisticated context chaining of agent contexts
+- More sophisticated context curation when chaining agent contexts
+  - I have the intuition that the chained context should itself be curated by an LLM.
 
-More coming soon!
+Then, here are a few ideas on how to evolve the project:
+- Right now, it is a library, but perhaps it would be better implemented as a new programming language (or superset of a programming language) ; this would reduce unecessary verbosity (for example, it would be nice to be able to figure out output_type through type inference instead of having to specify it explicitly)
+- Related to the above, we could even imagine having a preprocessor automatically generate the prompts (perhaps from a base prompt) where relevant : for example, for a task which is obviously a classification task (in a match, let's say), the preprocessor would generate the relevant prompt automagically.
+- There should be a "standard library" of common workflows, such as classifiers, routers, etc.
 
-
+More to come!

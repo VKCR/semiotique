@@ -8,11 +8,13 @@ Semiotique aims to propose a new way to build "LLM-enhanced" applications, based
 - Allow seamless integration between LLM evaluations and "plain old code"
 - Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
 
-This project is still at a _very early stage_, and is still very rough around the edges. This README will provide an overview of the design philosophy, current implementation, and next steps. There are short demo examples in the /demo directory showcasing the basic syntax, and a more advanced example - a personal note-taking app - in the /notetaker directory, showcasing how Semiotique can be used to build applications (refer to /notetaker/README.md for more information about it)
+This project is still at a _very early stage_, and is still very rough around the edges. This README will provide an overview of the design philosophy, core concepts, and next steps. 
+
+There are short demo examples in the demo/ directory showcasing the basic syntax, and a more advanced example - a personal note-taking app - in the notetaker/ directory, showcasing how Semiotique can be used to build applications (refer to notetaker/README.md for more information about it)
 
 ## Design Philosophy
 
-Most frameworks today for building agentic applications rely on the concept of the "agentic loop" : an LLM - enriched with tools & skills - is used as the main driver of the application, with the end goal of functioning fully autonomously. I believe that this is a mistake:
+Most frameworks today for building agentic applications rely on the concept of the "agentic loop" : an LLM enriched with tools & skills is used as the main driver of the application, with the end goal of functioning fully autonomously. I believe that this is a mistake:
 - LLMs can make errors, and its outputs are non-deterministic and non-replicable
 - LLMs have no judgment / taste, are prone to sycophancy, and often make questionable assumptions in its reasoning.
 
@@ -26,9 +28,9 @@ This leads to the two concepts already stated in the TLDR, namely that Semiotiqu
 - Allow seamless integration between LLM evaluations and "plain old code"
 - Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
 
-The goal of this project is to be an enabler for the development of new kinds of agentic applications.
+The end-goal of this project is to be an enabler for the development of new kinds of agentic applications.
 
-## Presentation
+## Core concepts
 
 ### The S singleton
 
@@ -111,8 +113,32 @@ with S.with_memory():
     print(S("What is my age?")) # Prints 30
 ```
 
+### The Agent base class
 
+Semiotique also proposes an Agent abstract class, which can be used as the base class for defining "Agents", aka objects whose methods are LLM-enhanced.
 
+Conceptually, Agents are meant to be the building blocks for agentic applications. They are meant satisfy the paradigm of object-oriented programming : each agent object satisfies a "contract", implementing some behavior in a specific scope. An agentic application should then be built "constructively" through a collection of agents.
+
+When you create a new class which inherits from Agent, you must define its docstring describing the Agent's behavior, and you must redefine its \_\_call\_\_(self, prompt: str, **kwargs) method, which should define the Agent's behavior when called on an arbitrary prompt.
+
+A basic "agentic" loop can then be easily defined in a few lines : 
+
+```
+my_agent = MyAgent()
+while (True):
+    prompt = input("Input your instructions")
+    my_agent(prompt)
+```
+
+From inheriting from the Agent base class, any LLM-expression evaluated in the derived agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the Semiotique runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
+
+SHOW DIAGRAM OF CONTEXT CHAINING
+
+Say how it's implemented right now, aka super simple
+
+## Next steps and ideas
+As this project is very early stage, there's still a lot of room for improvement. Off the top of my head: 
+- 
 
 
 

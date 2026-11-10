@@ -1,34 +1,42 @@
 # Semiotique
 
-**Disclaimer:** I am actively looking for collaborators to improve this project and potentially turn it into a commercial venture. If you are interested, feel free to contact me at vivek.claver@gmail.com :) 
+**Disclaimer:** This project is still at a _very early stage_, and very rough around the edges. 
+
+I am actively looking for collaborators to improve it and potentially turn it into a commercial venture. If you are interested, feel free to contact me at vivek.claver@gmail.com :) 
 
 ## TLDR
 
-Semiotique aims to propose a new way to build "LLM-enhanced" applications, based on two core concepts : 
-- Allow seamless integration between LLM evaluations and "plain old code"
-- Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
+Semiotique is a framework which proposes a new paradigm for building agentic applications. It is based upon two core ideas:
+- LLM calls should be "first-class citizens" of the language syntax ; programming constructs should allow to seamlessly mesh LLM usage with "plain old code"
+- The actual LLM calls should be managed by a runtime responsible for improving their performance and correctness, especially by doing context curation behind the scenes 
 
-This project is still at a _very early stage_, and is still very rough around the edges. This README will provide an overview of the design philosophy, core concepts, and next steps. 
+The hypothesis is that this paradigm will be an enabler of more sophisticated agentic applications, which will selectively leverage LLMs for tasks at which they are good at while relying on regular, deterministic code for the bulk of the application.
 
-There are short demo examples in the demo/ directory showcasing the basic syntax, and a more advanced example - a personal note-taking app - in the notetaker/ directory, showcasing how Semiotique can be used to build applications (refer to notetaker/README.md for more information about it)
+This README will provide an overview of the design philosophy, core concepts, and next steps. 
+
+There are short demo examples in the demo/ directory showcasing the basic syntax, and a more advanced example - a personal note-taking app - in the notetaker/ directory (refer to notetaker/README.md for more information about it)
 
 ## Design Philosophy
 
-Most frameworks today for building agentic applications rely on the concept of the "agentic loop" : an LLM enriched with tools & skills is used as the main driver of the application, with the end goal of functioning fully autonomously. I believe that this is a mistake:
+Today, most frameworks for building agentic applications rely on the concept of the "agentic loop" : an LLM enriched with tools & skills is used as the main driver of the application. A prompt is given as input, and the agentic loop then runs autonomously, leveraging the tools & skills in order to produce a final output. 
+
+I believe that this paradigm is the wrong approach, as LLMs have the following limitations: 
 - LLMs can make errors, and its outputs are non-deterministic and non-replicable
 - LLMs have no judgment / taste, are prone to sycophancy, and often make questionable assumptions in its reasoning.
 
-I believe that the above is due to fundamental limitations with LLMs, and will not ever be fixed through further scaling them.
+The agentic loop delegates too much responsibility to the LLM : formulating a plan of actions, deciding which tools / skills to use, generating the result, etc. As a consequence, the agentic loop can be brittle.
 
-In addition, current frameworks are usually not very elegant to use : none of the tediousness of configuration and executing calls to LLMs is hidden. Many frameworks even require you to manually define a state machine (such as LangGraph).
+In addition, current frameworks embracing the agentic loop are not very elegant to program with : none of the tediousness of configuring and executing calls to an LLM is hidden, and some frameworks even require you to manually define a state machine for more complex workflows (e.g. LangGraph).
 
-The fundamental design idea underlying Semiotique is to **invert the agentic loop** : rather than having an LLM black-box to which we provide (deterministic) tools, and then let "execute" the application based on a system prompt, we should aim to have an application _mostly_ written in deterministic code, with LLM evaluations sprinkled in where they would actually be useful (for tasks such as understanding natural language, outputting text, closed-ended reasoning, etc.)
+The Semiotique framework aims to solve all of the above by **"inverting the agentic loop"** : instead of having an LLM "black-box" to which we provide tools & skills and which we then let execute autonomously on a user input, we should instead develop applications _mostly_ written in regular, deterministic code, with LLM evaluations selectively sprinkled in where they would be actually be useful (for tasks such as understanding natural language, outputting text, closed-ended reasoning, etc.), but always within the guard-rails of regular code.
 
-This leads to the two concepts already stated in the TLDR, namely that Semiotique should :
-- Allow seamless integration between LLM evaluations and "plain old code"
-- Only leverage LLMs for **targeted tasks** for which they are demonstrably good at, through careful context curation
+In addition, the tediousness of configuring and using LLMs should be hidden from the programmer, so that he can focus on building application features.
 
-The end-goal of this project is to be an enabler for the development of new kinds of agentic applications.
+This leads to the two core ideas already stated in the TLDR above, namely that : 
+- LLM calls should be "first-class citizens" of the language syntax ; programming constructs should allow to seamlessly mesh LLM usage with "plain old code"
+- The actual LLM calls should be managed by a runtime responsible for improving their performance and correctness, especially by doing context curation behind the scenes 
+
+Finally, the framework should also provide a standard library of "agentic building blocks", in order to further facilitate building agentic applications.
 
 ## Core concepts
 
@@ -88,6 +96,15 @@ match animal_type:
   case "mammal": ...
 ```
 
+You can pass in tools to LLM-expressions to aid in their task
+
+```python
+def get_weather(city: str):
+  return "rainy" if "Paris" else "sunny"
+
+print(S("What is the weather like in Paris?", tools=[get_weather])) # Prints "rainy"
+```
+
 You can also specify an enclosing context which will get re-used for nested LLM-expressions within the lexical scope
 
 ```python
@@ -115,13 +132,35 @@ with S.with_memory():
 
 ### The Agent base class
 
-Semiotique also proposes an Agent abstract class, which can be used as the base class for defining "Agents", aka objects whose methods are LLM-enhanced.
+Semiotique provides an abstract class called Agent, which is meant to serve as the base class for defining "agentic" classes.
 
-Conceptually, Agents are meant to be the building blocks for agentic applications. They are meant satisfy the paradigm of object-oriented programming : each agent object satisfies a "contract", implementing some behavior in a specific scope. An agentic application should then be built "constructively" through a collection of agents.
+Conceptually, agentic classes are meant to be the building blocks for agentic applications. They are meant satisfy the paradigm of object-oriented programming : each agent class satisfies a "contract", implementing some behavior in a specific scope. An agentic application should then be built "constructively" through a "tangled hierarchy" of agents : top-level agents relying on lower-level agents, themselves relying on even lower-level agents, but sometimes relying on each other as well, etc.
 
-When you create a new class which inherits from Agent, you must define its docstring describing the Agent's behavior, and you must redefine its \_\_call\_\_(self, prompt: str, **kwargs) method, which should define the Agent's behavior when called on an arbitrary prompt.
+A class which inherits from Agent will automatically participate in the context engineering of any LLM-expression evaluations made from within agentic classes.
 
-A basic agent loop can then be easily defined in a few lines : 
+Basically, the Runtime keeps track of the "call stack" of the methods of agentic classes. Whenever code execution enters an agentic class' method, the Runtime pushes to the call-stack the docstring of that agentic class and of the called method (provided these docstrings are defined). 
+
+If an agentic class A's method happens to call an agentic class B's method, then the call stack will contain both the docstrings of agent A and agent B, along with their methods involved.
+
+Then, whenever the Runtime evaluates an LLM-expression, it synthesizes the current agent call stack into a system prompt which it provides when calling the LLM, giving the full context for the call.
+
+```text
++---------+                 +---------+                 +-----+
+| Agent A | -- method 1 --> | Agent B | -- method 2 --> | S() |
++---------+                 +---------+                 +-----+
+                                                           |
+                                  System Prompt contains [A, 1, B, 2] docstrings
+```
+
+This architecture for defining agentic application enables defining **modular** and **re-usable** agentic components. 
+
+Firstly, the context to be provided for steering the behavior of an LLM can be split into the docstrings of various classes and methods, close to the "regular code" with which they are associated, and can then be "re-assembled" via the context call stack in many different configurations. 
+
+Secondly, since the LLM-expression evaluation inherits the whole call stack, you can define "generic" agents exhibiting flexible behavior which can then be re-used in different contexts (as the calling agent will automatically provide more context in the call stack, "narrowing" the behavior of the "generic" called agent)
+
+Finally, an agent class which inherits from Agent also needs to redefine its \_\_call\_\_(self, prompt: str, **kwargs) method, which should define the agent's default behavior when called on an arbitrary prompt.
+
+A basic agent loop can then be easily defined in a few lines :
 
 ```python
 my_agent = MyAgent()
@@ -130,43 +169,59 @@ while (True):
     my_agent(prompt)
 ```
 
-However, the vision is to _not_ rely on the agent loop, which should be a fallback, but rather to have agents calling each other's methods just like "normal" objects.
+### The Runtime
 
-From inheriting from the Agent base class, any LLM-expression evaluated in an agent's methods will be automatically "wrapped" with a context containing the agent's docstring, in order to steer the LLM. Furthermore, when agent A calls agent B's method, the runtime does **context chaining**, and any LLM-expression evaluated in one of B's methods called from one of A's method will contain both the docstrings of agent A and agent B.
+The Runtime is the entity actually responsible for evaluating all the LLM-expressions. Its responsibilities are threefold :
+- It should allow for the configuration and monitoring of LLM-expression evaluation
+- It should implement optimizations to improve the performance of LLM-expression evaluations
+- It should implement context curation strategies in order to improve the correctness LLM-expression evaluations
 
-```text
-+---------+     +---------+     +-----+
-| Agent A | --> | Agent B | --> | S() |
-+---------+     +---------+     +-----+
-                                  |
-                   Prompt contains Agent A and Agent B docstrings
-```
+As of now, the implementation of the runtime is very rudimentary : 
+- There is no "control panel" or "monitoring dashboard"
+- It currently does not do implement any performance optimizations
+- It provides basic context curation via the agent call stack, by serializing its contents into a system prompt which it includes in LLM-expression evaluations
 
-As of now, context chaining is implemented in a very rudimentary manner : the docstrings of the Agents are simply concatenated and used as the system prompt when calling the LLM. However, in the future, the goal is to develop more sophisticated context management.
-
-The goal of context chaining is to provide flexibility and allow for an agent's methods to be used for different tasks. For instance, agent B's method could be generic enough that it would produce different outputs when called by agent A, or by another agent C, since the context provided to its LLM-expressions will be different in both cases.
+The next section will delve deeper into future improvements for the Runtime
 
 ## Next steps and ideas
 
-This project is still at a very early stage, and there is lots of room for improvement.
+The next steps involve developing features in three main areas : 
+- Improving the Runtime
+- Adding new syntax / language constructs
+- Creating a "standard library" of agentic components
 
-First off, the runtime is super rudimentary. Things to add : 
-- Perf improvements
-  - Batching LLM calls (especially for map operations)
+### Improving the Runtime
+
+The Runtime is currently rudimentary, and there are many features to be implemented:
+- Configuration & Monitoring
+  - Add a configuration panel allowing you to configure the details of LLM-expression evaluations (api key used, model used, reasoning mode, etc.)
+  - Add a monitoring dashboard allowing you to trace (and debug) LLM-expression evaluations
+  - Add a monitoring dashboard allowing you to trace (and debug) the agent call stack and how it translates into system prompts
+  - Allow to dump / restore state
+- Performance improvements
+  - Batching LLM calls (especially for similar operations, such as for a map operation)
+  - Async-ification of LLM calls
   - Parallelization of LLM calls
-  - Async LLM calls
-  - Switching between generic / decision models depending on the task
-- Configuration, observability, debuggability, traceability
-  - Having a way to configure the runtime
-  - Having a way to trace and debug calls made to LLMs
-  - Dumping and restoring state (esp. the chained agent contexts)
+  - Dynamic switching between models depending on the task complexity
+    - Especially dynamic switching between "generic" and "decision" models depending on the output type (switch to decision if it's enum-like)
   - Better handling of LLM calls : retries, output validation, error handling, failure recovery, etc.
-- More sophisticated context curation when chaining agent contexts, as right now it's incredibly basic
-  - I have the intuition that the chained context should itself be processed by an LLM
+  - Caching of prompts
+    - Especially agent call stack system prompts
+- Context curation improvements
+  - Implement different strategies for synthesizing the agent call stack
+    - For instance, using an LLM to synthesize the agent call stack into a system prompt, instead of serializing the context call stack
 
-Then, here are a few ideas on how to evolve the project:
-- Right now, it is a library, but perhaps it would be better implemented as a new programming language (or superset of a programming language) ; this would reduce unecessary verbosity (for example, it would be nice to be able to figure out output_type through type inference instead of having to specify it explicitly)
-- Related to the above, we could even imagine having a preprocessor automatically generate the prompts (perhaps from a base prompt) where relevant : for example, for a task which is obviously a classification task (switch statement), the preprocessor would generate the relevant prompt automagically.
-- There should be a "standard library" of common workflows, such as classifiers, routers, etc.
+### Adding new syntax / language constructs
+As of now, Semiotique is a Python library. However, the ambition is greater : to fully "enmesh" LLM-expression evaluation into regular code.
 
-More to come!
+The current implementation is still very verbose, and feels "forced" at times. It would be nice, for instance to have : 
+- Automatic type inference of LLM-expression outputs, instead of having to specify output_type
+- Easy constructs for typical tasks, such as routing or classification
+
+A future implementation should thus provide more constructs for making it even more intuitive to blend regular code and LLM-expression evaluation.
+
+This might require defining a superset of Python, switch to another programming language, or create a new programming language more adapted to this paradigm altogether.
+
+### Creating a standard library of agentic components
+
+Finally, Semiotique should provide a standard library of common agentic components (TBD) in order to aid in building agentic applications

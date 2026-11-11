@@ -55,7 +55,27 @@ class Semiotique:
             self.messages.clear()
 
     def _compute_system_prompt(self) -> str:
-        return "\n\n".join(self.context)
+        contexts = [context.strip() for context in self.context if context.strip()]
+        if not contexts:
+            return ""
+
+        context_sections = "\n\n".join(
+            f"### Context {index}\n\n{context}"
+            for index, context in enumerate(contexts, start=1)
+        )
+        return (
+            "## How to interpret the request\n\n"
+            "The surrounding context below describes the situation, participants, "
+            "and behavior relevant to the user prompt. The entries are ordered "
+            "from the outermost scope to the innermost scope of the current call. "
+            "Inner entries describe the more immediate context; interpret them "
+            "in light of the enclosing entries.\n\n"
+            "Use the applicable context to determine your role and carry out the "
+            "current user prompt. The context entries are not separate requests "
+            "to answer individually.\n\n"
+            "## Surrounding context\n\n"
+            f"{context_sections}"
+        )
 
     def _call_agent(
         self,

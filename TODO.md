@@ -1,5 +1,3 @@
-- TODO demos:
-  - Showcase agent method context stack
 - TODO notetaker demo
   - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
   - Add a "help" method to top-level notetakeragent which prints how to use the app
@@ -10,9 +8,6 @@
     - The goal is to progressively co-improve it as I improve the Semiotique SDK - use the notetaker app as inspiration for directions of improvement of the SDK
   - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search
 - TODO runtime:
-  - Add agent method docstring to context call stack 
-    - And add ability for both class and method docstring to be optional
-  - Improve agent context call stack serialization into system prompt 
   - Use Jev / other decision model when the structure output is an enum
   - Add the possibility to configure reasoning in runtime
   - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM

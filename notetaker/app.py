@@ -14,7 +14,9 @@ def app() -> None:
         interpretation = InterpretationAgent()
         reader = NoteTakerReader(ui, interpretation=interpretation)
         writer = NoteTakerWriter(ui, reader=reader, interpretation=interpretation)
-        notetaker = NoteTaker(ui, writer=writer, reader=reader)
+        notetaker = NoteTaker(
+            ui, writer=writer, reader=reader, interpretation=interpretation
+        )
         while True:
             notetaker()
 

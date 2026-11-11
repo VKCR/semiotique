@@ -1,8 +1,20 @@
+# Note taker agent demo
+## Presentation
+This is a demo of a "note-taking app". The app itself is very rudimentary, but the purpose of this demo is to showcase how one can build a "complex" app using the Semiotique paradigm.
+
+This app is a TUI for reading / searching, and inserting / modifying Notes. 
+
+Notes are characterized by their unique ID, possess a text content, can optionally belong to a list of categories, and can optionally be linked (bidirectionally) to other Notes. 
+
+The 
+
+
 Sections: 
 - Presentation, and how to run it
-- Explanation of how it works (and what code to look at)
+- Explanation of how it works (and the code organization, and especially where the important code resides)
 - Analysis
   - Especially compare it to agentic loop
+  - Structured flow for integrating new notes, and for searching vagues notes
 
 Notes:
 - README : emphasize the SMART and TANGLED (human in the loop) nature of the app, and how it makes it differ from the standard agent loop + tools

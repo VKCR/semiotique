@@ -1,16 +1,8 @@
-from enum import Enum
-
+from notetaker.agents.interpretation import InterpretationAgent
 from notetaker.agents.reader import NoteTakerReader
 from notetaker.tui import UserInterface
 from notetaker.agents.writer import NoteTakerWriter
 from semiotique.agent import Agent
-from semiotique.semiotique import S
-
-
-class InstructionType(str, Enum):
-    WRITER = "Writer"
-    READER = "Reader"
-    OTHER = "Other"
 
 
 class NoteTaker(Agent[None]):
@@ -22,12 +14,17 @@ class NoteTaker(Agent[None]):
     """
 
     def __init__(
-        self, ui: UserInterface, writer: NoteTakerWriter, reader: NoteTakerReader
+        self,
+        ui: UserInterface,
+        writer: NoteTakerWriter,
+        reader: NoteTakerReader,
+        interpretation: InterpretationAgent,
     ) -> None:
         """Initialize the interface and agents used to manage and retrieve notes."""
         self.ui = ui
         self.writer = writer
         self.reader = reader
+        self.interpretation = interpretation
 
     def __call__(
         self, prompt: str = "\nWhat would you like to do with your notes?", **kwargs
@@ -37,19 +34,28 @@ class NoteTaker(Agent[None]):
         Report unrecognized or unclear instructions to the user.
         """
         instruction = self.ui.ask(prompt)
-        instruction_type = S(
-            "Classify the user's instruction. Choose Writer for note management "
-            "such as creating, updating, merging, deleting, categorizing, or linking "
-            "notes. Choose Reader for querying the note knowledge base, such as "
-            "finding or retrieving notes, exploring related notes, or answering "
-            "questions using stored notes. Choose Other if the instruction does "
-            "not fit either responsibility or its intent is unclear.\n\n"
-            f"User instruction:\n{instruction}",
-            output_type=InstructionType,
+        instruction_type = self.interpretation.classify_choice(
+            instruction,
+            choices={
+                "Writer": (
+                    "Note management: creating, updating, merging, deleting, "
+                    "categorizing, or linking notes."
+                ),
+                "Reader": (
+                    "Querying the note knowledge base: finding or retrieving "
+                    "notes, exploring related notes, or answering questions "
+                    "using stored notes."
+                ),
+                "Other": (
+                    "Instructions outside reader and writer responsibilities "
+                    "or with unclear intent."
+                ),
+            },
+            default="Other",
         )
-        if instruction_type == InstructionType.WRITER:
+        if instruction_type == "Writer":
             self.writer(instruction)
-        elif instruction_type == InstructionType.READER:
+        elif instruction_type == "Reader":
             self.reader(instruction)
         else:
             self.ui.display("I didn't understand the instruction.")

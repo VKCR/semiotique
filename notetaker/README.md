@@ -57,4 +57,28 @@ Finally, the agent interpretation.py shows how "generic" operations can be re-us
 
 ## Examples
 
-{{TODO}}
+With the example DB loaded:
+
+> List all categories.
+
+> Summarize the notes in category psychology.
+
+> Show notes reading-002 and reading-003.
+
+> Find notes containing the literal keyword reputation.
+
+> Summarize what my notes say about conformity and social pressure.
+
+> Find notes similar to people agreeing with a group despite private doubts.
+
+> Add category sociology to note reading-002.
+
+> Remove category sociology from note reading-002.
+
+> Link notes reading-006 and reading-056.
+
+> Show all notes connected to reading-008.
+
+> Add a note: People may publicly agree with a group to avoid exclusion while privately disagreeing.
+
+> Merge notes reading-006 and reading-008 into one note about reputation and trust in trade.

@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from notetaker.agents.interpretation import InterpretationAgent
 from notetaker.utils import notedb
 from notetaker.utils.models import Note
 from notetaker.tui import UserInterface
@@ -47,9 +48,10 @@ class NoteTakerReader(Agent[None]):
     categories available in the collection.
     """
 
-    def __init__(self, ui: UserInterface) -> None:
-        """Initialize the interface used to ask questions and display results."""
+    def __init__(self, ui: UserInterface, interpretation: InterpretationAgent) -> None:
+        """Initialize the interface and shared message interpretation agent."""
         self.ui = ui
+        self.interpretation = interpretation
 
     def __call__(self, prompt: str, **kwargs) -> None:
         """Retrieve notes and list categories as requested in the prompt.
@@ -287,15 +289,9 @@ class NoteTakerReader(Agent[None]):
                     f"The category '{category}' matches '{theme}'. "
                     "Would you like to see its notes? Please answer yes or no."
                 )
-                approved = S(
-                    "Determine whether the user approves seeing notes from the "
-                    "matching category. Return true only if the user clearly "
-                    "wants to continue and approves. Default to false otherwise, "
-                    "including refusals, ambiguous replies, or empty messages. "
-                    "Do not guess or answer the message.\n\n"
-                    f"Category (JSON): {dumps(category, ensure_ascii=False)}\n"
-                    f"User message:\n{response}",
-                    output_type=bool,
+                approved = self.interpretation.is_approved(
+                    response,
+                    f"Show notes from the matching category '{category}'.",
                 )
                 if approved:
                     return self.get_note_ids_by_category(

@@ -1,3 +1,4 @@
+from notetaker.agents.interpretation import InterpretationAgent
 from notetaker.agents.notetakeragent import NoteTaker
 from notetaker.agents.reader import NoteTakerReader
 from notetaker.tui import UserInterface
@@ -10,8 +11,9 @@ def app() -> None:
     # load_into_db()
 
     with UserInterface() as ui:
-        reader = NoteTakerReader(ui)
-        writer = NoteTakerWriter(ui, reader=reader)
+        interpretation = InterpretationAgent()
+        reader = NoteTakerReader(ui, interpretation=interpretation)
+        writer = NoteTakerWriter(ui, reader=reader, interpretation=interpretation)
         notetaker = NoteTaker(ui, writer=writer, reader=reader)
         while True:
             notetaker()

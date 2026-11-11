@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from notetaker.agents.interpretation import InterpretationAgent
 from notetaker.utils import notedb
 from notetaker.agents.reader import NoteTakerReader, SearchNotes
 from notetaker.tui import UserInterface
@@ -76,10 +77,16 @@ class NoteTakerWriter(Agent[None]):
     revisions to existing notes.
     """
 
-    def __init__(self, ui: UserInterface, reader: NoteTakerReader) -> None:
-        """Initialize the interface and reader used to find notes for revision."""
+    def __init__(
+        self,
+        ui: UserInterface,
+        reader: NoteTakerReader,
+        interpretation: InterpretationAgent,
+    ) -> None:
+        """Initialize the interface, reader, and shared interpretation agent."""
         self.ui = ui
         self.reader = reader
+        self.interpretation = interpretation
 
     def __call__(self, prompt: str, **kwargs) -> None:
         """Apply the note changes requested in the prompt.
@@ -331,12 +338,10 @@ class NoteTakerWriter(Agent[None]):
                     f"Suggested categories: {', '.join(suggested_categories)}. "
                     "Would you like to add them? Please answer yes or no."
                 )
-                approved = S(
-                    "Return true only if the user clearly approves adding all "
-                    "suggested categories. Default to false for refusals, "
-                    "ambiguous replies, or empty messages.\n\n"
-                    f"User message:\n{response}",
-                    output_type=bool,
+                approved = self.interpretation.is_approved(
+                    response,
+                    "Add all suggested categories to the new note: "
+                    + dumps(suggested_categories, ensure_ascii=False),
                 )
                 if approved:
                     self.insert_categories(InsertCategories(
@@ -381,12 +386,10 @@ class NoteTakerWriter(Agent[None]):
         response = self.ui.ask(
             "Would you like to link the new note to these notes? Please answer yes or no."
         )
-        approved = S(
-            "Return true only if the user clearly approves creating all "
-            "suggested links. Default to false for refusals, ambiguous replies, "
-            "or empty messages.\n\n"
-            f"User message:\n{response}",
-            output_type=bool,
+        approved = self.interpretation.is_approved(
+            response,
+            "Create bidirectional links from the new note to all suggested note IDs: "
+            + dumps(suggested_ids, ensure_ascii=False),
         )
         if approved:
             self.insert_links(InsertLinks(

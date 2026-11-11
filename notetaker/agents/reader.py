@@ -252,15 +252,11 @@ class NoteTakerReader(Agent[None]):
 
         if not token.theme:
             response = self.ui.ask("Please enter one or more themes to search for.")
-            extracted = S(
-                "Extract the search themes explicitly provided in the user's "
-                "message as a list of strings. Return an empty list if no "
-                "theme is provided. Do not invent themes or answer the message.\n\n"
-                f"User message:\n{response}",
-                output_type=list[str],
+            extracted = self.interpretation.extract_terms(
+                response,
+                description="Search themes provided by the user.",
             )
             token.theme = [theme.strip() for theme in extracted if theme.strip()]
-
         if not token.theme:
             self.ui.display("Couldn't find any notes without a search theme.")
             return []
@@ -289,12 +285,15 @@ class NoteTakerReader(Agent[None]):
                     f"Show notes from the matching category '{category}'.",
                 )
                 if approved:
-                    return self.get_note_ids_by_category(
-                        GetNoteIdsByCategory(
-                            kind="GET_NOTE_IDS_BY_CATEGORY",
-                            category=category,
+                    notes.extend(
+                        self.get_note_ids_by_category(
+                            GetNoteIdsByCategory(
+                                kind="GET_NOTE_IDS_BY_CATEGORY",
+                                category=category,
+                            )
                         )
                     )
+                    continue
 
             notes.extend(
                 self.get_note_ids_by_keyword(

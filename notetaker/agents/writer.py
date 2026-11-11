@@ -407,24 +407,19 @@ class NoteTakerWriter(Agent[None]):
         instructions = token.instructions
 
         if not skip_prompt_construction:
-            note_ids = S(
-                "Extract only note IDs explicitly specified in the user's "
-                "refactoring instructions. Preserve the exact IDs. Return an "
-                "empty list if none are supplied. Do not invent IDs or execute "
-                "the instructions.\n\n"
-                f"Instructions:\n{instructions}",
-                output_type=list[str],
+            note_ids = self.interpretation.extract_terms(
+                instructions,
+                description="Note IDs specified by the user. Preserve the exact IDs.",
             )
             if note_ids:
                 notes = notedb.get_note_by_ids(note_ids)
             else:
-                themes = S(
-                    "Extract the themes identifying the notes targeted by the "
-                    "user's refactoring instructions. Return an empty list if "
-                    "no themes are supplied. Do not invent themes or execute "
-                    "the instructions.\n\n"
-                    f"Instructions:\n{instructions}",
-                    output_type=list[str],
+                themes = self.interpretation.extract_terms(
+                    instructions,
+                    description=(
+                        "Themes identifying the notes targeted by the user's "
+                        "refactoring instructions."
+                    ),
                 )
                 search = SearchNotes(
                     kind="SEARCH_NOTES",

@@ -54,3 +54,13 @@ class InterpretationAgent(Agent[bool]):
             f"User message (JSON): {dumps(message, ensure_ascii=False)}",
             output_type=Literal[tuple(choices)],
         )
+
+    def extract_terms(self, message: str, description: str) -> list[str]:
+        """Extract terms matching the supplied description from a user message."""
+        return S(
+            "Extract the explicitly supplied terms matching the description "
+            "as a list of strings. Return an empty list if none are supplied.\n\n"
+            f"Description: {description}\n"
+            f"User message (JSON): {dumps(message, ensure_ascii=False)}",
+            output_type=list[str],
+        )

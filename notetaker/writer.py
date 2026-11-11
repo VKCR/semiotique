@@ -70,17 +70,23 @@ class RefactoringPlan(BaseModel):
 
 
 class NoteTakerWriter(Agent[None]):
-    """Handle all tasks related to inserting, managing, and deleting personal notes.
+    """Create, revise, delete, categorize, and link personal notes.
 
-    Create new notes, update existing content, merge or delete notes, organize categories, and manage
-    links between related notes to maintain the user's personal knowledge base.
+    Offer suggestions when adding notes and require user approval for proposed
+    revisions to existing notes.
     """
 
     def __init__(self, ui: UserInterface, reader: NoteTakerReader) -> None:
+        """Initialize the interface and reader used to find notes for revision."""
         self.ui = ui
         self.reader = reader
 
     def __call__(self, prompt: str, **kwargs) -> None:
+        """Apply the note changes requested in the prompt.
+
+        Handle note creation, deletion, revision, category assignments, and
+        links in the requested order.
+        """
         operations = self._extract_operations(prompt)
         for token in operations:
             match token:
@@ -168,30 +174,40 @@ class NoteTakerWriter(Agent[None]):
         )
 
     def delete_note(self, token: DeleteNote) -> None:
+        """Delete the specified note, its category assignments, and its links."""
         self.ui.display(f"Deleting note with ID: {token.note_id}")
         notedb.delete_note(token.note_id)
 
     def delete_link(self, token: DeleteLink) -> None:
+        """Remove the link between two notes while preserving both notes."""
         self.ui.display(
             f"Deleting link between note IDs: {token.note_id_1} and {token.note_id_2}"
         )
         notedb.delete_link(token.note_id_1, token.note_id_2)
 
     def delete_links(self, token: DeleteLinks) -> None:
+        """Remove all links to or from a note while preserving the notes."""
         self.ui.display(f"Deleting all links for note ID: {token.note_id}")
         notedb.delete_links(token.note_id)
 
     def delete_category(self, token: DeleteCategory) -> None:
+        """Remove one category from a note, preserving its other categories."""
         self.ui.display(
             f"Deleting category '{token.category}' from note ID: {token.note_id}"
         )
         notedb.delete_category(token.note_id, token.category)
 
     def delete_categories(self, token: DeleteCategories) -> None:
+        """Remove all categories from a note, preserving its content and links."""
         self.ui.display(f"Deleting all categories for note ID: {token.note_id}")
         notedb.delete_categories(token.note_id)
 
     def insert_categories(self, token: InsertCategories) -> None:
+        """Assign additional categories to an existing note.
+
+        Preserve its current categories. Report a missing note without making
+        changes.
+        """
         if not notedb.get_note_by_ids([token.note_id]):
             self.ui.display(
                 f"Cannot insert categories. Missing note IDs: {token.note_id}"
@@ -204,6 +220,11 @@ class NoteTakerWriter(Agent[None]):
         notedb.insert_categories(token.note_id, token.categories)
 
     def insert_links(self, token: InsertLinks) -> None:
+        """Create links between the supplied pairs of notes.
+
+        Links connect notes in both directions. If any note is missing, report
+        it without creating any links.
+        """
         note_ids = sorted({note_id for link in token.links for note_id in link})
         existing_ids = {note.id for note in notedb.get_note_by_ids(note_ids)}
         missing_ids = [note_id for note_id in note_ids if note_id not in existing_ids]
@@ -217,6 +238,12 @@ class NoteTakerWriter(Agent[None]):
         notedb.insert_links(token.links)
 
     def insert_note(self, token: InsertNote) -> None:
+        """Create a note, asking for content if none is supplied.
+
+        When similar notes exist, let the user cancel, combine the content with
+        them, or keep a separate note. Suggest categories and links for new
+        notes, adding them only with the user's approval.
+        """
         self.ui.display(f"Inserting a new note with content: {token.content}")
 
         content = token.content
@@ -368,6 +395,11 @@ class NoteTakerWriter(Agent[None]):
             ))
 
     def refactor_notes(self, token: RefactorNotes, skip_prompt_construction=False) -> None:
+        """Revise or merge notes according to the supplied instructions.
+
+        Present proposed deletions and replacement notes for review. Let the
+        user revise or cancel the proposal, and apply it only after approval.
+        """
         self.ui.display("Refactoring notes")
         instructions = token.instructions
 

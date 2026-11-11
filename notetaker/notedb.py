@@ -50,10 +50,6 @@ def _row_to_note(
 
 
 def drop_db() -> None:
-    """Permanently delete all notes, categories, links, and embeddings.
-
-    Drops the application tables. Call init_db before using the database again.
-    """
     with _connect() as connection, connection:
         connection.execute("DROP TABLE IF EXISTS links")
         connection.execute("DROP TABLE IF EXISTS categories")
@@ -62,10 +58,6 @@ def drop_db() -> None:
 
 
 def init_db() -> None:
-    """Initialize note storage, preserving any existing tables and data.
-
-    Creates missing tables for notes, embeddings, categories, and links.
-    """
     with _connect() as connection, connection:
         connection.execute(
             """
@@ -105,16 +97,6 @@ def init_db() -> None:
 
 
 def get_note_by_ids(note_ids: list[str]) -> list[Note]:
-    """Retrieve the full notes for a list of known note IDs.
-
-    Args:
-        note_ids: IDs of the notes to retrieve.
-
-    Returns:
-        Matching notes, including their ID, creation timestamp, content,
-        embedding, categories, and directly linked note IDs. Missing IDs are
-        omitted, duplicate IDs produce one result, and result order is unspecified.
-    """
     placeholders = ", ".join("?" for _ in note_ids)
     with _connect() as connection:
         rows = connection.execute(
@@ -161,12 +143,6 @@ def get_note_by_ids(note_ids: list[str]) -> list[Note]:
 
 
 def get_categories() -> list[str]:
-    """List existing category names to discover how notes are organized.
-
-    Returns:
-        Distinct category names in alphabetical order, or an empty list if no
-        categories have been assigned.
-    """
     with _connect() as connection:
         rows = connection.execute(
             "SELECT DISTINCT category FROM categories ORDER BY category"
@@ -175,15 +151,6 @@ def get_categories() -> list[str]:
 
 
 def get_note_ids_by_category(category: str) -> list[str]:
-    """Find notes assigned to an exact category name.
-
-    Args:
-        category: Category name to match exactly, including case.
-
-    Returns:
-        Matching note IDs, or an empty list if the category has no notes.
-        Use get_note_by_ids to retrieve their full content.
-    """
     with _connect() as connection:
         rows = connection.execute(
             "SELECT note_id FROM categories WHERE category = ?",
@@ -193,17 +160,6 @@ def get_note_ids_by_category(category: str) -> list[str]:
 
 
 def get_note_ids_by_keyword(keyword: str) -> list[str]:
-    """Search note content for a literal, case-sensitive substring.
-
-    Args:
-        keyword: Text to find anywhere in note content. This is a literal
-            substring, not a regular expression or whole-word search. An empty
-            string matches every note.
-
-    Returns:
-        Matching note IDs, or an empty list if no content matches.
-        Use get_note_by_ids to retrieve their full content.
-    """
     with _connect() as connection:
         rows = connection.execute(
             "SELECT id FROM notes WHERE instr(content, ?) > 0",
@@ -213,18 +169,6 @@ def get_note_ids_by_keyword(keyword: str) -> list[str]:
 
 
 def get_linked_note_ids(note_id: str) -> list[str]:
-    """Find all notes connected to a note through any number of links.
-
-    Links are traversed in both directions, including indirect connections.
-
-    Args:
-        note_id: Starting note ID for exploring connected notes.
-
-    Returns:
-        Unique reachable note IDs, including the starting ID. The starting ID
-        is returned even if it does not exist. Result order is unspecified.
-        Use get_note_by_ids to retrieve the notes themselves.
-    """
     with _connect() as connection:
         rows = connection.execute(
             """
@@ -248,19 +192,6 @@ def get_linked_note_ids(note_id: str) -> list[str]:
 
 
 def get_similar_note_ids(content: str, n: int = 10) -> list[tuple[str, float]]:
-    """Find notes whose embeddings are most similar to the supplied text's embedding.
-
-    Args:
-        content: Text to compute an embedding for and use as the semantic search
-            query. Does not need to match an existing note and is not stored.
-        n: Maximum number of notes to return. Must be a positive integer;
-            defaults to 10.
-
-    Returns:
-        Pairs of note ID and cosine similarity score, ordered from most to least
-        similar. Higher scores indicate greater similarity. May return fewer
-        than n results. Use get_note_by_ids to retrieve the matching notes.
-    """
     embedding = compute_embedding(content)
     with _connect() as connection:
         rows = connection.execute(
@@ -281,17 +212,6 @@ def get_similar_note_ids(content: str, n: int = 10) -> list[tuple[str, float]]:
 
 
 def insert_note(content: str) -> str:
-    """Create a note and compute its embedding for semantic similarity searches.
-
-    Assigns a new UUID and the current UTC creation timestamp. Categories and
-    links can be added separately with insert_categories and insert_links.
-
-    Args:
-        content: Full text to store as the note's content.
-
-    Returns:
-        The new note's ID, for retrieving, categorizing, linking, or deleting it.
-    """
     embedding = compute_embedding(content)
     note_id = str(uuid4())
     created_at = datetime.now(UTC).isoformat()
@@ -308,13 +228,6 @@ def insert_note(content: str) -> str:
 
 
 def delete_note(note_id: str) -> None:
-    """Permanently delete a note and its associated categories and links.
-
-    The stored embedding is retained. Does nothing if the note does not exist.
-
-    Args:
-        note_id: ID of the note to delete.
-    """
     with _connect() as connection, connection:
         connection.execute(
             "DELETE FROM notes WHERE id = ?",
@@ -323,17 +236,6 @@ def delete_note(note_id: str) -> None:
 
 
 def insert_categories(note_id: str, categories: list[str]) -> None:
-    """Assign additional categories to an existing note.
-
-    Preserves current categories. A duplicate category assignment raises a
-    database integrity error and rolls back this call's changes.
-
-    Args:
-        note_id: ID of the existing note to categorize.
-        categories: Category names to add. Names must be distinct within this
-            list and must not already be assigned to the note. An empty list
-            makes no changes.
-    """
     with _connect() as connection, connection:
         connection.executemany(
             "INSERT INTO categories (note_id, category) VALUES (?, ?)",
@@ -342,14 +244,6 @@ def insert_categories(note_id: str, categories: list[str]) -> None:
 
 
 def delete_category(note_id: str, category: str) -> None:
-    """Remove a single category assignment from a note.
-
-    Does nothing if the note does not have the category.
-
-    Args:
-        note_id: ID of the note whose category assignment should be removed.
-        category: Category name to remove, matched exactly, including case.
-    """
     with _connect() as connection, connection:
         connection.execute(
             "DELETE FROM categories WHERE note_id = ? AND category = ?",
@@ -358,13 +252,6 @@ def delete_category(note_id: str, category: str) -> None:
 
 
 def delete_categories(note_id: str) -> None:
-    """Remove every category assignment from a note, preserving the note itself.
-
-    Does nothing if the note does not exist or has no categories.
-
-    Args:
-        note_id: ID of the note whose category assignments should be removed.
-    """
     with _connect() as connection, connection:
         connection.execute(
             "DELETE FROM categories WHERE note_id = ?",
@@ -373,16 +260,6 @@ def delete_categories(note_id: str) -> None:
 
 
 def insert_links(links: list[tuple[str, str]]) -> None:
-    """Create bidirectional links between existing notes.
-
-    Each pair is stored in sorted ID order, so reversing a pair represents the
-    same link. An existing link or duplicate pair raises a database integrity
-    error and rolls back this call's changes.
-
-    Args:
-        links: Pairs of existing note IDs to connect. Each pair must represent a
-            new, distinct link. An empty list makes no changes.
-    """
     with _connect() as connection, connection:
         connection.executemany(
             "INSERT INTO links (note_id_1, note_id_2) VALUES (?, ?)",
@@ -391,15 +268,6 @@ def insert_links(links: list[tuple[str, str]]) -> None:
 
 
 def delete_link(note_id_1: str, note_id_2: str) -> None:
-    """Remove a single bidirectional link between two notes.
-
-    The IDs can be supplied in either order. Does nothing if the link does
-    not exist.
-
-    Args:
-        note_id_1: ID of one linked note.
-        note_id_2: ID of the other linked note.
-    """
     with _connect() as connection, connection:
         connection.execute(
             "DELETE FROM links WHERE note_id_1 = ? AND note_id_2 = ?",
@@ -408,13 +276,6 @@ def delete_link(note_id_1: str, note_id_2: str) -> None:
 
 
 def delete_links(note_id: str) -> None:
-    """Remove every direct link to or from a note, preserving the notes.
-
-    Does nothing if the note does not exist or has no links.
-
-    Args:
-        note_id: ID of the note whose direct links should be removed.
-    """
     with _connect() as connection, connection:
         connection.execute(
             "DELETE FROM links WHERE note_id_1 = ? OR note_id_2 = ?",

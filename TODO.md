@@ -1,4 +1,5 @@
 - TODO notetaker demo
+  - Improve the suggested categories insert note flow by doing first extraction and then determining yes / no 
   - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
   - Add a "help" method to top-level notetakeragent which prints how to use the app
   - Write the readme!

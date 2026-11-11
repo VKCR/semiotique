@@ -41,16 +41,22 @@ class SearchNotes(BaseModel):
 
 
 class NoteTakerReader(Agent[None]):
-    """Handle all tasks related to querying the user's note knowledge base.
+    """Retrieve personal notes and present their content or a summary.
 
-    Find relevant notes by content, categories, or semantic similarity, follow
-    links between related notes, and answer questions using the stored knowledge.
+    Find notes by ID, category, keyword, similarity, or links, and list the
+    categories available in the collection.
     """
 
     def __init__(self, ui: UserInterface) -> None:
+        """Initialize the interface used to ask questions and display results."""
         self.ui = ui
 
     def __call__(self, prompt: str, **kwargs) -> None:
+        """Retrieve notes and list categories as requested in the prompt.
+
+        Display matching notes once each, in full or as a summary. Ask which
+        format the user wants unless the prompt already requests a summary.
+        """
         wants_categories = S(
             "Determine whether the user explicitly requests listing all "
             "categories in the knowledge base. Return true only for a clear "
@@ -197,29 +203,38 @@ class NoteTakerReader(Agent[None]):
         )
 
     def get_note_by_ids(self, token: GetNoteByIds) -> list[Note]:
+        """Return notes with the supplied IDs, omitting notes that do not exist."""
         self.ui.display(f"Getting notes by IDs for IDs: {token.note_ids}")
         return notedb.get_note_by_ids(token.note_ids)
 
     def get_categories(self) -> list[str]:
+        """Return the category names used by the notes, in alphabetical order."""
         self.ui.display("Getting all categories")
         return notedb.get_categories()
 
     def get_note_ids_by_category(self, token: GetNoteIdsByCategory) -> list[Note]:
+        """Return notes assigned to the supplied category."""
         self.ui.display(f"Getting note IDs for category: {token.category}")
         note_ids = notedb.get_note_ids_by_category(token.category)
         return notedb.get_note_by_ids(note_ids)
 
     def get_note_ids_by_keyword(self, token: GetNoteIdsByKeyword) -> list[Note]:
+        """Return notes whose content contains the supplied word or phrase."""
         self.ui.display(f"Getting note IDs for keyword: {token.keyword}")
         note_ids = notedb.get_note_ids_by_keyword(token.keyword)
         return notedb.get_note_by_ids(note_ids)
 
     def get_linked_note_ids(self, token: GetLinkedNoteIds) -> list[Note]:
+        """Return a note and all notes connected to it by links.
+
+        Include connections through other notes as well as direct links.
+        """
         self.ui.display(f"Getting linked note IDs for note ID: {token.note_id}")
         note_ids = notedb.get_linked_note_ids(token.note_id)
         return notedb.get_note_by_ids(note_ids)
 
     def get_similar_note_ids(self, token: GetSimilarNoteIds) -> list[Note]:
+        """Return notes similar in meaning to the supplied text."""
         self.ui.display(
             f"Getting similar note IDs for content: {token.content}"
         )
@@ -231,6 +246,11 @@ class NoteTakerReader(Agent[None]):
         return notedb.get_note_by_ids(note_ids)
 
     def search_notes(self, token: SearchNotes) -> list[Note]:
+        """Find notes relevant to the supplied themes, asking for any missing themes.
+
+        Offer notes from a matching category for the user's approval; otherwise
+        return notes with matching wording or similar meaning.
+        """
         self.ui.display(f"Searching notes")
 
         if not token.theme:

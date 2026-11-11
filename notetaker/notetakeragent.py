@@ -24,6 +24,7 @@ class NoteTaker(Agent[None]):
     def __init__(
         self, ui: UserInterface, writer: NoteTakerWriter, reader: NoteTakerReader
     ) -> None:
+        """Initialize the interface and agents used to manage and retrieve notes."""
         self.ui = ui
         self.writer = writer
         self.reader = reader
@@ -31,6 +32,10 @@ class NoteTaker(Agent[None]):
     def __call__(
         self, prompt: str = "\nWhat would you like to do with your notes?", **kwargs
     ) -> None:
+        """Ask for an instruction and route it to the writer or reader agent.
+
+        Report unrecognized or unclear instructions to the user.
+        """
         instruction = self.ui.ask(prompt)
         instruction_type = S(
             "Classify the user's instruction. Choose Writer for note management "

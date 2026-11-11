@@ -54,15 +54,17 @@ class Semiotique:
             self.is_memory_active = False
             self.messages.clear()
 
-    def __call__(
-        self,
-        value: str,
-        *,
-        output_type: OutputSpec[Any] = str,
-        tools: Sequence[Callable[..., Any]] = (),
-    ):
-        system_prompt = "\n\n".join(self.context)
+    def _compute_system_prompt(self) -> str:
+        return "\n\n".join(self.context)
 
+    def _call_agent(
+        self,
+        user_prompt: str,
+        *,
+        system_prompt: str,
+        output_type: OutputSpec[Any],
+        tools: Sequence[Callable[..., Any]],
+    ):
         agent = Agent(
             OpenRouterModel(self.model, provider=self.provider),
             instructions=system_prompt,
@@ -72,9 +74,24 @@ class Semiotique:
                 openrouter_provider={"require_parameters": True},
             ),
         )
-        result = agent.run_sync(
-            value,
+        return agent.run_sync(
+            user_prompt,
             message_history=self.messages if self.is_memory_active else None,
+        )
+
+    def __call__(
+        self,
+        user_prompt: str,
+        *,
+        output_type: OutputSpec[Any] = str,
+        tools: Sequence[Callable[..., Any]] = (),
+    ):
+        system_prompt = self._compute_system_prompt()
+        result = self._call_agent(
+            user_prompt,
+            system_prompt=system_prompt,
+            output_type=output_type,
+            tools=tools,
         )
         if self.is_memory_active:
             self.messages[:] = result.all_messages()

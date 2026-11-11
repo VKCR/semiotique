@@ -1,27 +1,3 @@
-- TODO runtime:
-  - Change the name "value" of the parameter to semiotique __call__ method
-  - Move the context curation strategy into its own method of runtime class
-  - Move calling the LLM client into its own method of runtime class
-  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
-    - This would be the first step of a "dashboard" to monitor LLM usage
-      - In the long run it would include all things related to observability and debugging, such as execution traces, dumping state, allowing for retries, etc.
-    - Include that in the README
-  - Use Jev / other decision model when the structure output is an enum
-  - Add the possibility to configure reasoning in runtime
-  - Open question :
-    - Keep allowing tool use when calling the LLM?
-    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
-  - FAR : create a standard library for repeated patterns
-    - Routing
-    - Matching
-    - Mapping
-    - Extracting
-    - Standard prompts, such as awaiting a "yes / no" answer
-    - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
-      - Use an LLM to construct prompts?
-  - FAR : improve perf
-    - Obviously don't be a wrapper around pydantic-ai
-    - Parallelization
 - TODO demos:
   - Showcase agent method context stack
 - TODO notetaker demo
@@ -33,3 +9,22 @@
   - GOAL : The code should be straightforward and easily legible
     - The goal is to progressively co-improve it as I improve the Semiotique SDK - use the notetaker app as inspiration for directions of improvement of the SDK
   - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search
+- TODO runtime:
+  - Use Jev / other decision model when the structure output is an enum
+  - Add the possibility to configure reasoning in runtime
+  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
+    - This would be the first step of a "dashboard" to monitor LLM usage
+      - In the long run it would include all things related to observability and debugging, such as execution traces, dumping state, allowing for retries, etc.
+    - Include that in the README
+  - Open question :
+    - Keep allowing tool use when calling the LLM?
+    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
+  - FAR : improve perf
+    - Obviously don't be a wrapper around pydantic-ai
+    - Parallelization
+- Standard library : create a standard library for repeated patterns
+  - Routing
+  - Matching
+  - Mapping
+  - Extracting
+  - Standard prompts, such as awaiting a "yes / no" answer

@@ -59,14 +59,12 @@ class NoteTakerReader(Agent[None]):
         Display matching notes once each, in full or as a summary. Ask which
         format the user wants unless the prompt already requests a summary.
         """
-        wants_categories = S(
-            "Determine whether the user explicitly requests listing all "
-            "categories in the knowledge base. Return true only for a clear "
-            "request to list category names, including when combined with "
-            "other requests. Return false for requests only to find notes in "
-            "a category or for ambiguous messages. Do not answer the prompt.\n\n"
-            f"User prompt:\n{prompt}",
-            output_type=bool,
+        wants_categories = self.interpretation.expresses_intent(
+            prompt,
+            intent=(
+                "Explicitly request listing all category names in the knowledge "
+                "base."
+            ),
         )
         if wants_categories:
             categories = self.get_categories()
@@ -194,14 +192,11 @@ class NoteTakerReader(Agent[None]):
                 | SearchNotes
             ],
         )
+
     def _wants_summary(self, message: str) -> bool:
-        return S(
-            "Determine whether the user wants a summary of the fetched notes. "
-            "Return true only for a clear request for a summary. Default to "
-            "false for full content, ambiguous replies, requests for both, or "
-            "empty messages. Do not guess or answer the message.\n\n"
-            f"User message:\n{message}",
-            output_type=bool,
+        return self.interpretation.expresses_intent(
+            message,
+            intent="Request a summary of the fetched notes.",
         )
 
     def get_note_by_ids(self, token: GetNoteByIds) -> list[Note]:

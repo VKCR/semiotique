@@ -274,14 +274,14 @@ class NoteTakerWriter(Agent[None]):
                 "Would you like to abandon the new note, integrate it with "
                 "the existing notes, or insert it as a separate note?"
             )
-            choice = S(
-                "Classify the user's choice as abandon, integrate, or insert. "
-                "Choose insert only for a clear request to create a separate "
-                "note, and integrate only for a clear request to integrate "
-                "with existing notes. Default to abandon for ambiguous or "
-                "empty replies. Do not answer the message.\n\n"
-                f"User message:\n{response}",
-                output_type=Literal["abandon", "integrate", "insert"],
+            choice = self.interpretation.classify_choice(
+                response,
+                choices={
+                    "abandon": "Abandon inserting the new note.",
+                    "integrate": "Integrate the new content with existing notes.",
+                    "insert": "Create a separate note with the new content.",
+                },
+                default="abandon",
             )
             if choice == "abandon":
                 self.ui.display("Abandoned inserting the new note.")
@@ -498,13 +498,14 @@ class NoteTakerWriter(Agent[None]):
                 feedback = self.ui.ask(
                     "Approve these changes, cancel, or give feedback to revise them."
                 )
-                decision = S(
-                    "Classify the user's feedback as approve, cancel, or revise. "
-                    "Approve only clear consent to apply the entire current "
-                    "plan without changes. Use cancel for a clear request to "
-                    "stop, and revise for changes or ambiguous replies.\n\n"
-                    f"User feedback:\n{feedback}",
-                    output_type=Literal["approve", "cancel", "revise"],
+                decision = self.interpretation.classify_choice(
+                    feedback,
+                    choices={
+                        "approve": "Apply the entire current plan without changes.",
+                        "cancel": "Stop refactoring notes.",
+                        "revise": "Revise the current plan using the feedback.",
+                    },
+                    default="revise",
                 )
                 if decision == "cancel":
                     self.ui.display("Cancelled refactoring notes.")

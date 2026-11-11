@@ -1,4 +1,5 @@
 from json import dumps
+from typing import Literal
 
 from semiotique.agent import Agent
 from semiotique.semiotique import S
@@ -35,4 +36,21 @@ class InterpretationAgent(Agent[bool]):
             f"Proposal (JSON): {dumps(proposal, ensure_ascii=False)}\n"
             f"User message (JSON): {dumps(message, ensure_ascii=False)}",
             output_type=bool,
+        )
+
+    def classify_choice(
+        self, message: str, choices: dict[str, str], default: str
+    ) -> str:
+        """Classify a user message among the supplied choices."""
+        if default not in choices:
+            raise ValueError("The default must be one of the supplied choices.")
+
+        return S(
+            "Return the key of the choice clearly expressed by the user's "
+            "message, using the supplied descriptions. Otherwise, return "
+            "the default choice.\n\n"
+            f"Choices (JSON): {dumps(choices, ensure_ascii=False)}\n"
+            f"Default choice (JSON): {dumps(default, ensure_ascii=False)}\n"
+            f"User message (JSON): {dumps(message, ensure_ascii=False)}",
+            output_type=Literal[tuple(choices)],
         )

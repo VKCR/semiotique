@@ -1,42 +1,35 @@
-- TODO:
-    - Re-read the note taker app code to see if there are any improvements I could make to it (or to the Semiotique SDK)
-    - Test out thoroughly the insertion and refactoring flows of the note taking app
-    - Re-write this README + write a README for the Semiotique runtime + write a README for the note taking app
-- Runtime improvements
-    - Make the code async compatible
-    - Change the name "value" of the parameter to semiotique __call__ method
-    - Move the context curation strategy into its own method of runtime class
-    - Move calling the LLM client into its own method of runtime class
-    - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
-        - This would be the first step of a "dashboard" to monitor LLM usage
-            - In the long run it would include all things related to observability and debugging, such as execution traces, dumping state, allowing for retries, etc.
-        - Include that in the README
-    - Use Jev / other decision model when the structure output is an enum
-    - Add the possibility to configure reasoning in runtime
-    - Dynamic switching of model and reasoning mode based on task complexity
-    - Open question :
-        - Keep allowing tool use when calling the LLM?
-        - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
-    - FAR : create a standard library for repeated patterns
-        - Routing
-        - Matching
-        - Mapping
-        - Extracting
-        - Standard prompts, such as awaiting a "yes / no" answer
-        - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
-            - Use an LLM to construct prompts?
-    - FAR : improve perf
-        - Obviously don't be a wrapper around pydantic-ai
-        - Parallelization
-- Notetaker app improvements
-    - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
-    - README : emphasize the SMART and TANGLED (human in the loop) nature of the app, and how it makes it differ from the standard agent loop + tools
-        - Emphasize the "action token" paradigm I have introduced, which inverts the agentic loop, giving you the ability to run deterministic code between different "tool calls" (or rather decision by the agent of what methods to run)
-        - Give some usage examples
-            - Complex querying
-            - Adding a new note, with the category / link flow
-            - Merge all notes relevant to language
-    - GOAL : The code should be straightforward and easily legible
-        - The goal is to progressively co-improve it as I improve the Semiotique SDK - use the notetaker app as inspiration for directions of improvement of the SDK
-    - Add a "help" method to top-level notetakeragent which prints how to use the app
-    - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search
+- TODO runtime:
+  - Change the name "value" of the parameter to semiotique __call__ method
+  - Move the context curation strategy into its own method of runtime class
+  - Move calling the LLM client into its own method of runtime class
+  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
+    - This would be the first step of a "dashboard" to monitor LLM usage
+      - In the long run it would include all things related to observability and debugging, such as execution traces, dumping state, allowing for retries, etc.
+    - Include that in the README
+  - Use Jev / other decision model when the structure output is an enum
+  - Add the possibility to configure reasoning in runtime
+  - Open question :
+    - Keep allowing tool use when calling the LLM?
+    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
+  - FAR : create a standard library for repeated patterns
+    - Routing
+    - Matching
+    - Mapping
+    - Extracting
+    - Standard prompts, such as awaiting a "yes / no" answer
+    - Classification should be handled more natively : auto-constructed prompt so that you don't have to build a similar prompt every time
+      - Use an LLM to construct prompts?
+  - FAR : improve perf
+    - Obviously don't be a wrapper around pydantic-ai
+    - Parallelization
+- TODO demos:
+  - Showcase agent method context stack
+- TODO notetaker demo
+  - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
+  - Add a "help" method to top-level notetakeragent which prints how to use the app
+  - Write the readme!
+  - Re-read the note taker app code to see if there are any improvements I could make to it (or to the Semiotique SDK)
+  - Test out thoroughly the insertion and refactoring flows of the note taking app
+  - GOAL : The code should be straightforward and easily legible
+    - The goal is to progressively co-improve it as I improve the Semiotique SDK - use the notetaker app as inspiration for directions of improvement of the SDK
+  - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search

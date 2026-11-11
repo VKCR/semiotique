@@ -10,7 +10,7 @@ Semiotique is a framework which proposes a new paradigm for building agentic app
 - LLM calls should be "first-class citizens" of the language syntax ; programming constructs should allow to seamlessly mesh LLM usage with "plain old code"
 - The actual LLM calls should be managed by a runtime responsible for improving their performance and correctness, especially by doing context curation behind the scenes 
 
-The hypothesis is that this paradigm will be an enabler of more sophisticated agentic applications, which will selectively leverage LLMs for tasks at which they are good at while relying on regular, deterministic code for the bulk of the application.
+The hypothesis is that this paradigm will be an enabler for more sophisticated agentic applications, which will selectively leverage LLMs for tasks at which they are good at while relying on regular, deterministic code for the bulk of the application.
 
 This README will provide an overview of the design philosophy, core concepts, and next steps. 
 
@@ -23,12 +23,13 @@ Today, most frameworks for building agentic applications rely on the concept of 
 I believe that this paradigm is the wrong approach, as LLMs have the following limitations: 
 - LLMs can make errors, and its outputs are non-deterministic and non-replicable
 - LLMs have no judgment / taste, are prone to sycophancy, and often make questionable assumptions in its reasoning.
+- LLMs are just bad at certain tasks, such as iterations.
 
 The agentic loop delegates too much responsibility to the LLM : formulating a plan of actions, deciding which tools / skills to use, generating the result, etc. As a consequence, the agentic loop can be brittle.
 
 In addition, current frameworks embracing the agentic loop are not very elegant to program with : none of the tediousness of configuring and executing calls to an LLM is hidden, and some frameworks even require you to manually define a state machine for more complex workflows (e.g. LangGraph).
 
-The Semiotique framework aims to solve all of the above by **"inverting the agentic loop"** : instead of having an LLM "black-box" to which we provide tools & skills and which we then let execute autonomously on a user input, we should instead develop applications _mostly_ written in regular, deterministic code, with LLM evaluations selectively sprinkled in where they would be actually be useful (for tasks such as understanding natural language, outputting text, closed-ended reasoning, etc.), but always within the guard-rails of regular code.
+The Semiotique framework aims to solve all of the above by **"inverting the agentic loop"** : instead of having an LLM "black-box" to which we provide tools & skills and which we then let execute autonomously on a user input, we should instead develop applications _mostly_ written in regular, deterministic code, with LLM evaluations selectively sprinkled in where they would be actually be useful (for tasks such as understanding natural language, outputting text, closed-ended reasoning, etc.), but always within the guardrails of regular code.
 
 In addition, the tediousness of configuring and using LLMs should be hidden from the programmer, so that he can focus on building application features.
 
@@ -42,7 +43,7 @@ Finally, the framework should also provide a standard library of "agentic buildi
 
 ### The S singleton
 
-Semiotique (today) is a "runtime" which allows to evaluate LLM-expressions from anywhere in your code, via the global singleton `S`
+Semiotique is a "runtime" which allows to evaluate LLM-expressions from anywhere in your code, via the global singleton `S`
 
 For instance, you can use `S` to interact with an LLM : 
 
@@ -53,14 +54,14 @@ print(S("Hello! Who are you?"))
 You can of course save the result of an LLM-expression to a variable
 
 ```python
-capital = S("What is the capital of France?")
+capital = S("What is the capital of France?") # Prints "Paris"
 ```
 
 You can use LLM-expressions anywhere, for example in a lambda mapping over a list : 
 ```python
 countries = ["France", "Italy", "Spain"]
 capitals = list(map(lambda country: S(f"What is the capital of {country}?"), countries))
-print(capitals) # prints ['Paris', 'Rome', 'Madrid']
+print(capitals) # Prints ['Paris', 'Rome', 'Madrid']
 ```
 
 The default return type is `str`, but you can specify any type, including custom types
@@ -156,9 +157,9 @@ This architecture for defining agentic application enables defining **modular** 
 
 Firstly, the context to be provided for steering the behavior of an LLM can be split into the docstrings of various classes and methods, close to the "regular code" with which they are associated, and can then be "re-assembled" via the context call stack in many different configurations. 
 
-Secondly, since the LLM-expression evaluation inherits the whole call stack, you can define "generic" agents exhibiting flexible behavior which can then be re-used in different contexts (as the calling agent will automatically provide more context in the call stack, "narrowing" the behavior of the "generic" called agent)
+Secondly, since the LLM-expression evaluation inherits the whole call stack, you can define "generic" agents exhibiting flexible behavior which can then be re-used in different contexts (as the calling agent will automatically provide more context in the call stack, "narrowing" the behavior of the "generic" agent which gets called)
 
-Finally, an agent class which inherits from Agent also needs to redefine its \_\_call\_\_(self, prompt: str, **kwargs) method, which should define the agent's default behavior when called on an arbitrary prompt.
+Finally, an agent class which inherits from Agent also needs to redefine its `__call__(self, prompt: str, **kwargs)` method, which should define the agent's default behavior when called on an arbitrary prompt.
 
 A basic agent loop can then be easily defined in a few lines :
 
@@ -217,6 +218,7 @@ As of now, Semiotique is a Python library. However, the ambition is greater : to
 The current implementation is still very verbose, and feels "forced" at times. It would be nice, for instance to have : 
 - Automatic type inference of LLM-expression outputs, instead of having to specify output_type
 - Easy constructs for typical tasks, such as routing or classification
+- Automated "compilation" of prompts, from more concise instructions, from placeholders, or perhaps from the surrounding code itself.
 
 A future implementation should thus provide more constructs for making it even more intuitive to blend regular code and LLM-expression evaluation.
 

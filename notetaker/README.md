@@ -1,5 +1,5 @@
 Sections: 
-- Presentation
+- Presentation, and how to run it
 - Explanation of how it works (and what code to look at)
 - Analysis
   - Especially compare it to agentic loop

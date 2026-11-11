@@ -6,9 +6,9 @@
 import struct
 from datetime import UTC, datetime
 
-from notetaker import notedb
-from notetaker.models import Note
-from notetaker.utils import compute_embedding
+from notetaker.utils import notedb
+from notetaker.utils.models import Note
+from notetaker.utils.helpers import compute_embedding
 
 def test_db():
     print("\nget_note_by_ids:")

@@ -1,8 +1,8 @@
 from enum import Enum
 
-from notetaker.reader import NoteTakerReader
+from notetaker.agents.reader import NoteTakerReader
 from notetaker.tui import UserInterface
-from notetaker.writer import NoteTakerWriter
+from notetaker.agents.writer import NoteTakerWriter
 from semiotique.agent import Agent
 from semiotique.semiotique import S
 

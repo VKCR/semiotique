@@ -1,7 +1,7 @@
-from notetaker.notetakeragent import NoteTaker
-from notetaker.reader import NoteTakerReader
+from notetaker.agents.notetakeragent import NoteTaker
+from notetaker.agents.reader import NoteTakerReader
 from notetaker.tui import UserInterface
-from notetaker.writer import NoteTakerWriter
+from notetaker.agents.writer import NoteTakerWriter
 
 
 def app() -> None:

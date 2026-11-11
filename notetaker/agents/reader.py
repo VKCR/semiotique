@@ -3,8 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from notetaker import notedb
-from notetaker.models import Note
+from notetaker.utils import notedb
+from notetaker.utils.models import Note
 from notetaker.tui import UserInterface
 from semiotique.agent import Agent
 from semiotique.semiotique import S

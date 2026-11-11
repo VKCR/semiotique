@@ -8,8 +8,8 @@ from uuid import uuid4
 
 import sqlite_vec
 
-from notetaker.models import Note
-from notetaker.utils import compute_embedding
+from notetaker.utils.models import Note
+from notetaker.utils.helpers import compute_embedding
 
 
 DB_PATH = Path(__file__).resolve().parent / "notes.sqlite3"

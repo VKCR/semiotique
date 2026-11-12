@@ -51,7 +51,13 @@ These operations - which are of particular interest - are reader.search_notes, w
   - We then enter a loop with message memory, where we use evaluate the refactoring prompt to determine the suggested changes to make ; we then prompt the user for feedback, and he can either ask for other changes, approve the changes, or cancel the refactoring.
   - Once changes are approved, we apply them. If any new notes are to be added which do not specify categories or links, we leverage writer.insert_note in order to benefit from its category and link suggestions.
 
-All of the above operations also showcase how easy it is to keep a human-in-the-loop when using Semiotique.
+All of the above operations show how the Semiotique framework can be leveraged to enmesh LLM-expression evaluations within deterministic code to do the following tasks:
+- Routing / Classifying / Extraction tasks (which depends on understanding natural language)
+- Using LLM-expression evaluations to craft prompts
+- Branching based on LLM-expression evaluations
+- Structured output based on LLM-expression evalution (refactored Notes)
+
+All of the above operations also showcase how easy it is to keep a human-in-the-loop when using Semiotique framework.
 
 Finally, the agent interpretation.py shows how "generic" operations can be re-used within other agents, and how they will be "steered" by the automatically curated agent context call stack (refer to the repo README to learn about this concept).
 

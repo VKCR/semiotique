@@ -1,27 +1,11 @@
-- TODO notetaker demo
-  - Improve the suggested categories insert note flow by doing first extraction and then determining yes / no 
-  - TODO: TEST OUT THOROUGHLY THE NOTE TAKER APP
-  - Add a "help" method to top-level notetakeragent which prints how to use the app
-  - Write the readme!
-  - Re-read the note taker app code to see if there are any improvements I could make to it (or to the Semiotique SDK)
-  - Test out thoroughly the insertion and refactoring flows of the note taking app
-  - GOAL : The code should be straightforward and easily legible
-    - The goal is to progressively co-improve it as I improve the Semiotique SDK - use the notetaker app as inspiration for directions of improvement of the SDK
-  - Use the LLM to reword more user instructions, for example the search string when doing embedding similarity search
 - TODO runtime:
   - Use Jev / other decision model when the structure output is an enum
   - Add the possibility to configure reasoning in runtime
-  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM
-    - This would be the first step of a "dashboard" to monitor LLM usage
-      - In the long run it would include all things related to observability and debugging, such as execution traces, dumping state, allowing for retries, etc.
-    - Include that in the README
+  - Include a "verbose" mode (env var) which prints to stderr the Prompts used to call the LLM, for debugging
   - Open question :
     - Keep allowing tool use when calling the LLM?
-    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of teh Agent's methods as tools (default __call__ method essentially)
+    - Autowrap the methods of Agent derived classes to make them tool-use compatible ; include a default method which calls an LLM with all of the Agent's methods as tools (default __call__ method essentially)
   - OPT : add S.ignore_context() method?
-  - FAR : improve perf
-    - Obviously don't be a wrapper around pydantic-ai
-    - Parallelization
 - Standard library : create a standard library for repeated patterns
   - Routing
   - Matching

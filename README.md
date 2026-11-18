@@ -2,7 +2,7 @@
 
 **Disclaimer:** This project is still at a _very early stage_, and very rough around the edges. 
 
-I am actively looking for collaborators to improve it and potentially turn it into a commercial venture. If you are interested, feel free to contact me at vivek.claver@gmail.com :) 
+I am actively looking for collaborators to work on it and improve it. If you are interested, feel free to contact me at vivek.claver@gmail.com :) 
 
 ## TLDR
 
